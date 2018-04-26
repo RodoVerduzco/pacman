@@ -48,10 +48,6 @@ char* processData(char data[], int port)
     int header    = atoi((const char*)strtok(data, "_")); /* To identify the data */
     char* message = strtok(NULL, "_");  /* The main message received */
     char* response = (char *)malloc(sizeof(char*));
-    int card;
-
-  /* Seed the random function when shuffuling the deck*/
-    srand(clock());
 
     switch(header)
     {

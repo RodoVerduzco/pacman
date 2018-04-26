@@ -33,10 +33,6 @@
 
 
 #define BUFFER_SIZE 1024
-#define CARD_NUM    20
-
-enum cardVal { J=11, Q=12, K=13, A=1, BLACKJACK=21 };
-enum header  { BET, PLAY, SUM, PLAYER, DEALER, GAMEOVER, BUSTED };
 
 /* Game Handlers */
 

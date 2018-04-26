@@ -1,6 +1,6 @@
 /*
 *
-*   Program :   blackjack.c
+*   Program :   Client.c
 *
 *   Authors  :  Cynthia
 *               A0102
@@ -49,7 +49,7 @@ int main(int argc, char * argv[])
     /* File Descriptor */
       int connection_fd;
 
-      printf("\n=== BLACKJACK ===\n");
+      printf("\n=== PACMAN ===\n");
 
     /* Check the correct arguments */
       if (argc != 3)

@@ -100,4 +100,3 @@ int sendData(int connection_fd, char bf[])
   /* Return the data alredy processed */
     return processReceivedData(receivedData);
 }
-C
