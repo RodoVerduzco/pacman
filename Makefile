@@ -3,9 +3,9 @@
 ### Variables for this project ###
 # These should be the only ones that need to be modified
 # The files that must be compiled, with a .o extension
-OBJECTS = Game_Server.o error.o Client_Helper.o
+OBJECTS = Server_Helper.o Server_Com.o error.o Client_Helper.o Client_Com.o ClientUI.o
 # The header files
-DEPENDS = Game_Server.h error.h Client_Helper.h
+DEPENDS = Server_Helper.h Server_Com.h error.h Client_Helper.h Client_Com.h ClientUI.h
 # The executable programs to be created
 CLIENT = Client
 SERVER = Server

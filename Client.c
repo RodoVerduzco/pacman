@@ -24,7 +24,6 @@
 *               On any unrecoverable error, the program shows an error
 *               message, and exits.
 *
-*
 */
 
 /* Custom libraries */

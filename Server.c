@@ -38,7 +38,7 @@
   #include <arpa/inet.h>
 
 /* Custom libraries */
-  #include "Game_Server.h"
+  #include "Server_Helper.h"
   #include "error.h"
 
 #include <ifaddrs.h>
