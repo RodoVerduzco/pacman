@@ -29,7 +29,7 @@
 #include <netdb.h>
 #include <arpa/inet.h>
 
-#include "fatal_error.h"
+#include "error.h"
 
 
 #define BUFFER_SIZE 1024

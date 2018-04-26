@@ -3,9 +3,9 @@
 ### Variables for this project ###
 # These should be the only ones that need to be modified
 # The files that must be compiled, with a .o extension
-OBJECTS = Game_Server.o fatal_error.o Client_Helper.o
+OBJECTS = Game_Server.o error.o Client_Helper.o
 # The header files
-DEPENDS = Game_Server.h fatal_error.h Client_Helper.h
+DEPENDS = Game_Server.h error.h Client_Helper.h
 # The executable programs to be created
 CLIENT = Client
 SERVER = Server
@@ -50,4 +50,3 @@ clean:
 
 # Indicate the rules that do not refer to a file
 .PHONY: clean all
-M

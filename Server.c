@@ -39,7 +39,7 @@
 
 /* Custom libraries */
   #include "Game_Server.h"
-  #include "fatal_error.h"
+  #include "error.h"
 
 #include <ifaddrs.h>
 

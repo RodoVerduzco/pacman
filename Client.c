@@ -28,7 +28,7 @@
 */
 
 /* Custom libraries */
-  #include "fatal_error.h"
+  #include "error.h"
   #include "Client_Helper.h"
 
   #include <ifaddrs.h>
