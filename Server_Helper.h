@@ -26,13 +26,28 @@
 #ifndef SERVER_HELPER_H
 #define SERVER_HELPER_H
 
+/* Libraries */
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <stdlib.h>
+
+/* Sockets Libraries */
+#include <netdb.h>
+#include <arpa/inet.h>
+#include <ifaddrs.h>
+
+/* Custom Libraries */
+#include "error.h"
 
 #define BUFFER_SIZE 255
+#define MAX_QUEUE 5
 
-/* Data processing*/
-char* processData(char data[], pid_t pid);
+/* Server Functions */
+int initServer(char * port);
 
-#endif  /* NOT SERVER_HELPER_H */
+/* Data processing */
+char * processData(char data[], pid_t pid);
+void attendRequest(int client_fd, int port);
+
+#endif  /* SERVER_HELPER_H */

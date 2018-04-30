@@ -30,11 +30,10 @@
 #include <arpa/inet.h>
 
 #include "error.h"
+#include "Client_Com.h"
 
 
 #define BUFFER_SIZE 1024
-
-/* Game Handlers */
 
 /* Communication between client/server */
 int sendData(int connection_fd, char bf[]);

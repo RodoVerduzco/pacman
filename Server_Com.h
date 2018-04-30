@@ -1,6 +1,6 @@
 /*
 *
-*   Program :   Server_Com.c
+*   Program :   Server_Com.h
 *
 *   Authors  :  Cynthia
 *               A0102
@@ -15,11 +15,16 @@
 *              This program handles the server comomunication with
 *              the client.
 *
-*   Usage  :
-*
-*
-*   Error handling:
-*               On any unrecoverable error, the program shows an error
-*               message, and exits.
-*
 */
+
+#ifndef SERVER_COM_H
+#define SERVER_COM_H
+
+/* Custom Libraries */
+  #include "Server_Helper.h"
+
+enum { WAIT, ACK };
+
+void sendStringServer(int connection_fd, char * buffer);
+
+#endif /* SERVER_HELPER_H */

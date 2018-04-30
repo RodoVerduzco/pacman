@@ -1,6 +1,6 @@
 /*
 *
-*   Program :   Client_Com.c
+*   Program :   Client_Com.h
 *
 *   Authors  :  Cynthia
 *               A0102
@@ -15,8 +15,21 @@
 *              This program handles the clients communication with
 *              the server.
 *
-*   Error handling:
-*               On any unrecoverable error, the program shows an error
-*               message, and exits.
-*
 */
+
+#ifndef CLIENT_COM_H
+#define CLIENT_COM_H
+
+/* Sockets libraries */
+#include <netdb.h>
+#include <arpa/inet.h>
+
+#include "Client_Helper.h"
+
+enum {ACK, INIT};
+
+ void sendStringClient(int connection_fd, char * buffer);
+ void recvStringClient(int connection_fd, char * buffer, char * receivedData);
+ int sendData(int connection_fd, char bf[]);
+
+#endif /* CLIENT_COM_H */

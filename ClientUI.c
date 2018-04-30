@@ -22,3 +22,11 @@
 *               message, and exits.
 *
 */
+
+#include "ClientUI.h"
+
+/* Empty function to avoid warnings*/
+void empty()
+{
+  printf("I AM USELESS");
+}

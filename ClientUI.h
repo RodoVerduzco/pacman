@@ -22,3 +22,12 @@
 *               message, and exits.
 *
 */
+
+#ifndef CLIENTUI_H
+#define CLIENTUI_H
+
+#include "error.h"
+
+void empty();
+
+#endif /* CLIENTUI_H */

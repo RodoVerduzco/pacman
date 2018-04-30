@@ -68,34 +68,19 @@ int processReceivedData(char data[])
 int sendData(int connection_fd, char bf[])
 {
   char buffer[BUFFER_SIZE];
-  int chars_read;
   char receivedData[BUFFER_SIZE];
 
   /* Prepare the request to the server */
     sprintf(buffer, "%s\n", bf);
 
-  /*  *  *  *  *  SEND  *  *  *  *  */
-  /* Send the response */
-    if (send(connection_fd, buffer, strlen(buffer) + 1, 0) == -1 )
-    {
-        fatalError("send");
-        fatalErrorMsg("sendData/send", "Couldn't send the response to the Server");
-    }
-
   /* Clear the buffer */
     bzero(&buffer, BUFFER_SIZE);
 
-  /*  *  *  *  *  RECV  *  *  *  *  */
-  /* Receive the request from the server */
-    chars_read = recv(connection_fd, buffer, BUFFER_SIZE, 0);
-    if (chars_read == -1)
-    {
-        fatalError("recv");
-        fatalErrorMsg("sendData/recv", "Couldn't receive the request from the server");
-    }
+ /* Send the Data */
+    sendStringClient(connection_fd, buffer);
 
-  /* Scans everything including spaces */
-    sscanf(buffer, "%[^\t]", receivedData);
+ /* Receive a Response */
+    recvStringClient(connection_fd, buffer, receivedData);
 
   /* Return the data alredy processed */
     return processReceivedData(receivedData);
