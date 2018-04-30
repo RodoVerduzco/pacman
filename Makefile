@@ -20,7 +20,7 @@ CC = gcc
 CFLAGS = -Wall -g -std=gnu99 -pedantic # -O2
 # Options to use for the final linking process
 # This one links the math library
-LDLIBS = -lm
+LDLIBS = -lm -lpthread
 
 ### The rules ###
 # These should work for most projects without change
