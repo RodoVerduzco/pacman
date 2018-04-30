@@ -135,11 +135,12 @@ void printLocalIPs()
 */
 void waitForConnections(int server_fd)
 {
-    struct sockaddr_in client_address;
     socklen_t client_address_size;
-    char client_presentation[INET_ADDRSTRLEN];
-    int client_fd;
     pid_t new_pid;
+
+    struct sockaddr_in client_address;
+    char   client_presentation[INET_ADDRSTRLEN];
+    int    client_fd;
 
     int children=0;
 
