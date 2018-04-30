@@ -21,10 +21,9 @@
 #define SERVER_COM_H
 
 /* Custom Libraries */
-  #include "Server_Helper.h"
-
-enum { WAIT, ACK };
+#include "Server_Helper.h"
 
 void sendStringServer(int connection_fd, char * buffer);
+int recvStringThread(int connection_fd, char * buffer);
 
 #endif /* SERVER_HELPER_H */

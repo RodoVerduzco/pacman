@@ -44,7 +44,7 @@
      if (chars_read == -1)
      {
        fatalError("recv");
-       fatalErrorMsg("sendData/recv", "Couldn't receive the request from the server");
+       fatalErrorMsg("recvStringClient/recv", "Couldn't receive the request from the server");
      }
 
      /* Scans everything including spaces */

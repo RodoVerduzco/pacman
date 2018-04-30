@@ -26,7 +26,7 @@
 
 #include "Client_Helper.h"
 
-enum {ACK, INIT};
+enum { CON, ACK, WAIT, INIT }; /* MUST HAVE COPY ON SERVER_HELPER */
 
  void sendStringClient(int connection_fd, char * buffer);
  void recvStringClient(int connection_fd, char * buffer, char * receivedData);

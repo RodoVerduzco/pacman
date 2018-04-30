@@ -37,15 +37,18 @@
  */
 int processReceivedData(char data[])
 {
+  int header;
+  char message [BUFFER_SIZE] = "";
 
-    int header    = atoi(strtok(data, "_")); /* To identify the data */
-    char* message = strtok(NULL, "_");      /* The real message from sever */
+  sscanf(data, "%d %s", &header, message);
 
     switch(header){
 
-      case 0:
+      case WAIT:
              printf("   > Received Message from the server: %s\n\n", message);
-             return 0;
+             return WAIT;
+             //sprintf(response, "%d WILL WAIT", WAIT);
+
 
     }
 
@@ -70,11 +73,11 @@ int sendData(int connection_fd, char bf[])
   char buffer[BUFFER_SIZE];
   char receivedData[BUFFER_SIZE];
 
+  /* Clear the buffer */
+  bzero(&buffer, BUFFER_SIZE);
+
   /* Prepare the request to the server */
     sprintf(buffer, "%s\n", bf);
-
-  /* Clear the buffer */
-    bzero(&buffer, BUFFER_SIZE);
 
  /* Send the Data */
     sendStringClient(connection_fd, buffer);

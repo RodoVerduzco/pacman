@@ -31,7 +31,6 @@
 
 /* Custom libraries */
 #include "Server_Helper.h"
-#include "Server_Com.h"
 
 /*   *   *   *   *   *   *   *   *   *   *   *   *   *   */
 /*               Function Declarations                   */
@@ -135,64 +134,45 @@ void printLocalIPs()
 */
 void waitForConnections(int server_fd)
 {
+    pthread_t new_tid;
+    thread_data_t * connection_data = NULL;
     socklen_t client_address_size;
-    pid_t new_pid;
 
     struct sockaddr_in client_address;
     char   client_presentation[INET_ADDRSTRLEN];
     int    client_fd;
 
-    int children=0;
-
-    // Get the size of the structure to store client information
-    client_address_size = sizeof client_address;
-
     while (1)
     {
-        // ACCEPT
-        // Wait for a client connection
-        client_fd = accept(server_fd, (struct sockaddr *) &client_address, &client_address_size);
-        if (client_fd == -1)
+
+      /* CREATE A THREAD */
+        if(checkRunningThreads() == 1)
         {
-            fatalError("accept");
-        }
+            // Get the size of the structure to store client information
+              client_address_size = sizeof client_address;
 
-        /* Cambiar por Threads*/
-       if (children < MAX_QUEUE)
-       {
+            // Accept
+              client_fd = accept(server_fd, (struct sockaddr *)&client_address, &client_address_size);
 
-           children++;
+              if (client_fd == -1){
+                fatalError("ERROR: accept");
+              }
 
-        /* Create a child to deal with the new client */
-            new_pid = fork();
+          // Get the data from the client
+            inet_ntop(client_address.sin_family, &client_address.sin_addr, client_presentation, sizeof client_presentation);
+            printf("\nReceived incomming connection from %s on port %d\n", client_presentation, client_address.sin_port);
 
-        /* Parent Process */
-            if(new_pid > 0)
-            {
-              /* Close the socket to the new client */
-                close(client_fd);
-            }
-            else
-              /* Child process */
-                if(new_pid == 0)
-                {
-                  /* Get the data from the client */
-                    inet_ntop (client_address.sin_family, &client_address.sin_addr, client_presentation, sizeof client_presentation);
-                    printf("Received incomming connection from %s on port %d\n", client_presentation, client_address.sin_port);
+            updateRunningThreads(1);
 
-                  /* Deal with the client */
-                    attendRequest(client_fd, client_address.sin_port);
+          // Allocate thread's structure
+            connection_data = (thread_data_t *) malloc(sizeof (thread_data_t ));
 
-                  /* Finish the child process */
-                      children --;
-                      close(client_fd);
-                      exit(EXIT_SUCCESS);
-                }
-              /* Error */
-                else
-                {
-                    fatalError("Unable to fork");
-                }
+          // Prepare the structure to send to the thread
+            initializeStruct(connection_data, client_fd);
+
+            int status = pthread_create(&new_tid, NULL, attentionThread, (void *)connection_data);
+            checkThreadStatus(status, new_tid);
+            
+          }
       }
-    }
 }

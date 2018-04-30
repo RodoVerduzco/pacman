@@ -37,3 +37,20 @@ void sendStringServer(int connection_fd, char * buffer)
         fatalError("ERROR: send");
     }
 }
+
+int recvStringThread(int connection_fd, char * buffer)
+{
+    int chars_read;
+
+    chars_read = recv(connection_fd, buffer, BUFFER_SIZE, 0);
+    if (chars_read == -1)
+    {
+      fatalError("recv");
+      fatalErrorMsg("sendData/recv", "Couldn't receive the request from the server");
+    }
+
+    if(chars_read == 0)
+      return -1;
+
+    return 1;
+}
