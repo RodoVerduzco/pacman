@@ -40,15 +40,17 @@ int processReceivedData(char data[])
   int header;
   char message [BUFFER_SIZE] = "";
 
-  sscanf(data, "%d %s", &header, message);
+  sscanf(data, "%d %[^\n]s", &header, message);
 
     switch(header){
 
       case WAIT:
-             printf("   > Received Message from the server: %s\n\n", message);
+             printf("\n%s\n\n", message);
              return WAIT;
              //sprintf(response, "%d WILL WAIT", WAIT);
-
+      case INIT:
+            printf("INIT");
+            return INIT;
 
     }
 

@@ -166,18 +166,27 @@ int openSocket(char * address, char * port)
 void play(int connection_fd)
 {
     char data[BUFFER_SIZE]; /* Stores the data received from server */
+    char player_name[BUFFER_SIZE];
     int response;
+
+    printf("What is your name? ");
+    fgets(player_name, BUFFER_SIZE, stdin);
 
     while(1)
     {
       /* Prepare and send the data to the server*/
-        sprintf(data, "%d HELLO", CON);
+        sprintf(data, "%d %s", CON, player_name);
         response = sendData(connection_fd, data);
 
         if(response == WAIT)
         {
+
           sprintf(data, "%d WILL WAIT", WAIT);
           sendData(connection_fd, data);
+        }
+        if(response == INIT)
+        {
+          
         }
 
 

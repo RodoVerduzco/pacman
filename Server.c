@@ -38,7 +38,7 @@
 
 void usage(char * program);
 void printLocalIPs();
-void waitForConnections(int server_fd);
+void waitForConnections(int server_fd, game_t * game, locks_t * data_locks);
 void attendRequest(int client_fd, int port);
 
 /*   *   *   *   *   *   *   *   *   *   *   *   *   *   */
@@ -48,6 +48,8 @@ void attendRequest(int client_fd, int port);
 int main(int argc, char * argv[])
 {
       int server_fd;
+      game_t game;
+      locks_t data_locks;
 
       printf("\n=== SERVER ===\n");
 
@@ -58,6 +60,9 @@ int main(int argc, char * argv[])
           fatalErrorMsg("main","Incorrect Number of parameters");
       }
 
+    /* Initialize the data structures */
+        initGame(&game, &data_locks);
+
   	/* Show the IPs assigned to this computer */
   	  printLocalIPs();
 
@@ -65,7 +70,7 @@ int main(int argc, char * argv[])
       server_fd = initServer(argv[1]);
 
   	/* Listen for connections from the clients */
-      waitForConnections(server_fd);
+      waitForConnections(server_fd, &game, &data_locks);
 
     /* Close the socket */
       close(server_fd);
@@ -132,7 +137,7 @@ void printLocalIPs()
 /*
     Main loop to wait for incomming connections
 */
-void waitForConnections(int server_fd)
+void waitForConnections(int server_fd, game_t * game, locks_t * data_locks)
 {
     pthread_t new_tid;
     thread_data_t * connection_data = NULL;
@@ -146,7 +151,7 @@ void waitForConnections(int server_fd)
     {
 
       /* CREATE A THREAD */
-        if(checkRunningThreads() == 1)
+        if(checkNumPlayers(game, data_locks) == 1)
         {
             // Get the size of the structure to store client information
               client_address_size = sizeof client_address;
@@ -162,17 +167,17 @@ void waitForConnections(int server_fd)
             inet_ntop(client_address.sin_family, &client_address.sin_addr, client_presentation, sizeof client_presentation);
             printf("\nReceived incomming connection from %s on port %d\n", client_presentation, client_address.sin_port);
 
-            updateRunningThreads(1);
+            updateRunningThreads(1, game, data_locks);
 
           // Allocate thread's structure
             connection_data = (thread_data_t *) malloc(sizeof (thread_data_t ));
 
           // Prepare the structure to send to the thread
-            initializeStruct(connection_data, client_fd);
+            initializeStruct(connection_data, client_fd, game, data_locks);
 
             int status = pthread_create(&new_tid, NULL, attentionThread, (void *)connection_data);
             checkThreadStatus(status, new_tid);
-            
+
           }
       }
 }

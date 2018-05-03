@@ -56,9 +56,9 @@
 /*   *   *   *   *   *   *   *   *   *   */
 
   /* Defines */
-    #define BUFFER_SIZE 255
-    #define MIN_PLAYERS 2   /* Minimum number of players set to 2 for testing purposes */
-    #define MAX_QUEUE 5
+    #define BUFFER_SIZE 1024
+    #define NUM_PLAYERS 2   /* Minimum number of players set to 2 for testing purposes */
+    #define MAX_QUEUE 2
 
     enum { CON, ACK, WAIT, INIT }; /* MUST HAVE COPY ON CLIENT_COM */
 
@@ -68,11 +68,41 @@
 /*                                       */
 /*   *   *   *   *   *   *   *   *   *   */
 
+  /* =================== player_struct ==================== */
+  /*  Structure to hold each player's information           */
+  /* ====================================================== */
+    typedef struct player_struct {
+        int id;
+        char * name;
+        int points;
+        int pacman;
+    } player_t;
+
+    /* ============ game_struct ============ */
+    /*  Data for the bank operations         */
+    /* ===================================== */
+      typedef struct game_struct   {
+          int running_players;          /* Number of playeers counter */
+          player_t * player_array;    /* Array of the accounts */
+      } game_t;
+
+    /* ==================== locks_struct ==================== */
+    /*  Structure for the mutexes to keep the data consistent */
+    /* ====================================================== */
+      typedef struct locks_struct {
+          //pthread_mutex_t transactions_mutex; /* Mutex for the number of transactions variable  */
+          pthread_mutex_t * player_mutex;     /* Mutex array for the operations on the players */
+          pthread_mutex_t running_players_mutex;       /* Mutex for the Number of threads Running */
+      } locks_t;
+
+
   /* ============== data_struct =============== */
   /*  Data that will be sent to each thread     */
   /* ========================================== */
     typedef struct data_struct {
       int connection_fd;    /* The file descriptor for the socket */
+      game_t * game;
+      locks_t  * locks;
     } thread_data_t;
 
 
@@ -85,16 +115,18 @@
 
   /* Server Functions */
     int initServer(char * port);
+    void initGame(game_t * game, locks_t * data_locks);
     void checkThreadStatus(int status, pthread_t tid);
 
   /* Data processing */
-    char * processData(char data[], pid_t pid);
+    char * processData(char data[], int fd,  game_t * game, locks_t * data_locks);
     void attendRequest(int client_fd, int port);
-    void initializeStruct(thread_data_t * connection_data, int connection_fd);
+    void initializeStruct(thread_data_t * connection_data, int connection_fd, game_t * game, locks_t * data_locks);
     void * attentionThread(void * arg);
 
   /* Running Threads */
-    void updateRunningThreads(int value);
-    int checkRunningThreads();
+    void updateRunningThreads(int value, game_t * game, locks_t * data_locks);
+    int checkNumPlayers(game_t * game, locks_t * data_locks);
+    int getNumPlayers(game_t * game, locks_t * data_locks);
 
 #endif  /* SERVER_HELPER_H */

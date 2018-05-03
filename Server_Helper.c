@@ -26,10 +26,6 @@
 */
 #include "Server_Helper.h"
 
-/* Number of threads Running */
-  pthread_mutex_t running_mutex = PTHREAD_MUTEX_INITIALIZER;
-  int running_threads = 0;
-
 int initServer(char * port)
 {
     struct addrinfo hints;
@@ -92,26 +88,81 @@ int initServer(char * port)
       return server_fd;
 }
 
-int checkRunningThreads()
+/*
+ *  Function: initGame
+ *
+ *  Purpose:   Function to initialize all the information
+ *             necessary. This will allocate memory for the
+ *             players, and for the mutexes.
+ *
+ *  Parameters:
+ *           Input   Receives a pointer to the game_t
+ *                   structure and another one to the
+ *                   data_locks structure.
+ *
+ */
+void initGame(game_t * game, locks_t * data_locks)
 {
-  if(running_threads >= MAX_QUEUE)
-    return 0;
-  else
-    if(running_threads > 0)
-      if(running_threads > MIN_PLAYERS)
-        return 1;
-      else
-          return 0;
-    else
-      return 1;
+    /* Set the number of transactions */
+      game->running_players = 0;
+
+    /* Allocate the arrays in the structures */
+      game->player_array = malloc(NUM_PLAYERS * sizeof (player_t));
+    /* Allocate the arrays for the mutexes */
+      data_locks->player_mutex = malloc(NUM_PLAYERS * sizeof (pthread_mutex_t));
+
+    /*
+       Initialize the mutexes, using a different method for dynamically created
+       ones
+    */
+      pthread_mutex_init(&data_locks->running_players_mutex, NULL);
+
+      for (int i=0; i<NUM_PLAYERS; i++)
+      {
+          game->player_array[i].id = i+1;
+          game->player_array[i].points = 0;
+          pthread_mutex_init(&data_locks->player_mutex[i], NULL);
+      }
 }
 
-void updateRunningThreads(int value)
+int checkNumPlayers(game_t * game, locks_t * data_locks)
 {
+  /* Variable to store the mutex for readability*/
+    pthread_mutex_t running_players_mutex = data_locks->running_players_mutex;
+    int waiting = 0;
+
+  /* Retrieve the balance of the account */
+    pthread_mutex_lock(&running_players_mutex); /* Start the critical section */
+        if(game->running_players<NUM_PLAYERS)
+          waiting = 1;
+    pthread_mutex_unlock(&running_players_mutex);   /* Finishes critical Section */
+
+    return waiting;
+}
+
+int getNumPlayers(game_t * game, locks_t * data_locks)
+{
+  /* Variable to store the mutex for readability*/
+    pthread_mutex_t running_players_mutex = data_locks->running_players_mutex;
+    int num;
+
+  /* Retrieve the balance of the account */
+    pthread_mutex_lock(&running_players_mutex); /* Start the critical section */
+        num = game->running_players;
+    pthread_mutex_unlock(&running_players_mutex);   /* Finishes critical Section */
+
+    return num;
+}
+
+void updateRunningThreads(int value, game_t * game, locks_t * data_locks)
+{
+  /* Variable to store the mutex for readability*/
+    pthread_mutex_t running_players_mutex = data_locks->running_players_mutex;
+
   /* Number of threads Counter */
-    pthread_mutex_lock(&running_mutex);    /* Start Critical Section */
-      running_threads = running_threads + value;
-    pthread_mutex_unlock(&running_mutex);  /* End Critical Section */
+    pthread_mutex_lock(&running_players_mutex);    /* Start Critical Section */
+        game->running_players = game->running_players + value;
+    pthread_mutex_unlock(&running_players_mutex);  /* End Critical Section */
 }
 
 /*
@@ -126,10 +177,16 @@ void updateRunningThreads(int value)
  *                   and the pointers to bank_t and locks_t structures).
  *
  */
-void initializeStruct(thread_data_t * connection_data, int connection_fd)
+void initializeStruct(thread_data_t * connection_data, int connection_fd, game_t * game, locks_t * data_locks)
 {
   /* Set the value of the file Descriptor */
     connection_data->connection_fd = connection_fd;
+
+  /* Allocate bank_data structure pointer */
+    connection_data->game = game;
+
+  /* Allocate locks_t structure pointer */
+    connection_data->locks = data_locks;
 }
 
 /*
@@ -151,7 +208,9 @@ void * attentionThread(void * arg)
      Store the values from connection data struct in other variables for
      readability.
   */
-    int connection_fd = connection_data->connection_fd;
+    game_t  * game       = connection_data->game;
+    locks_t * data_locks = connection_data->locks;
+    int connection_fd    = connection_data->connection_fd;
 
     char buffer[BUFFER_SIZE] = ""; /* To store the message received and to be sent */
 
@@ -167,8 +226,7 @@ void * attentionThread(void * arg)
               if(recv_val == 0)
                 return (void *)0;
 
-              sprintf(buffer, "%s", processData(buffer, connection_fd));
-              printf("BUFFER  %s", buffer);
+              sprintf(buffer, "%s", processData(buffer, connection_fd, game, data_locks));
               sendStringServer(connection_fd, buffer);
       }
 }
@@ -188,11 +246,11 @@ void * attentionThread(void * arg)
  *           Output  returns a string with the new data to be
  *                    sent to the client.
  */
-char * processData(char buffer[], int fd)
+char * processData(char buffer[], int fd, game_t * game, locks_t * data_locks)
 {
-    int header;
+    int  header;
     char message [BUFFER_SIZE] = "";
-    char * response = (char *)malloc(sizeof(char*));
+    char * response = (char *)malloc(BUFFER_SIZE * sizeof(char*));
 
 
     sscanf(buffer, "%d %s", &header, message);
@@ -200,68 +258,31 @@ char * processData(char buffer[], int fd)
     switch(header)
     {
       case CON:
+                /*  * * * * * * * * * * * *  */
                 /* Make it cleaner inside a function */
-                if(running_threads<MIN_PLAYERS)
-                  sprintf(response, "%d Waiting for other Players to arrive\n", WAIT);
+
+                if(checkNumPlayers(game, data_locks))
+                {
+                  sprintf(response, "%d Hello %s! We are currently waiting for other Players to arrive\n", WAIT, message);
+                  printf("There are currently %d players connected", getNumPlayers(game, data_locks));
+                }
                 else
-                  sprintf(response, "%d GAME IS READY\n", INIT);
+                  sprintf(response, "%d Hello %s! The game is about to Begin\n", INIT, message);
                 break;
       case WAIT:
+                printf("Players are waiting");
                 while(1)
                 {
-                  if(running_threads>MIN_PLAYERS)
+                  if(!checkNumPlayers(game, data_locks))
                   {
-                    printf("IS WAITING");
-                    sprintf(response, "GAME IS READY");
+                    printf("Everyone is ready");
+                    sprintf(response, "%d GAME IS READY", INIT);
                     break;
                   }
                 }
 
     }
         return response;
-}
-
-/*
-    Hear the request from the client and send an answer
-*/
-void attendRequest(int client_fd, int port)
-{
-    char buffer[BUFFER_SIZE];
-    char clientData[BUFFER_SIZE];
-    int chars_read;
-
-    while(1)
-    {
-      // Clear the buffer to avoid errors
-        bzero(&buffer, BUFFER_SIZE);
-
-      // RECV
-      // Read the request from the client
-        chars_read = recv(client_fd, buffer, BUFFER_SIZE, 0);
-        if (chars_read == 0)
-        {
-          printf("Client disconnected");
-          return;
-        }
-        if (chars_read == -1)
-        {
-          printf("Client receive error");
-          return;
-        }
-
-      /* Get the received data */
-        sscanf(buffer, "%s", clientData);
-
-      /* Store the new data to the buffer*/
-        sprintf(buffer, "%s", processData(clientData, port));
-
-      // SEND
-      // Write back the reply
-        if (send(client_fd, buffer, strlen(buffer) + 1, 0) == -1)
-        {
-          printf("Could not send reply");
-        }
-    }
 }
 
 /*
