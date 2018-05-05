@@ -2,8 +2,8 @@
 *
 *   Program :   ClientUI.h
 *
-*   Authors  :  Cynthia
-*               A0102
+*   Authors  :  Cynthia Berenice Castillo Millán
+ *               A01374530
 *
 *               Ludovic
 *               A0
