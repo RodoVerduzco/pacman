@@ -46,11 +46,20 @@ void gameInit()
 	
 	drawMap(map, starty, startx);
 	pacman = initPlayer(PACMAN, startx, starty);
+	drawPlayer(pacman);
 	ghost1 = initPlayer(GHOST_1, startx, starty);
+	drawPlayer(ghost1);
 	ghost2 = initPlayer(GHOST_2, startx, starty);
+	drawPlayer(ghost2);
 	ghost3 = initPlayer(GHOST_3, startx, starty);
+	drawPlayer(ghost3);
     
     getch();			// Wait for user input
-	endwin();			// End curses mode	
+	endwin();			// End curses mode
+	
+	free(pacman);
+	free(ghost1);
+	free(ghost2);
+	free(ghost3);
     return EXIT_SUCCESS;
 }

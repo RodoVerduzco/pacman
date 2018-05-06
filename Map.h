@@ -31,12 +31,14 @@
 #define LEFT  3
 #define RIGHT 4
 
-/* Game vars */
+/* MAP */
 #define WALL '#'
 #define WALL_X 'x'
 #define DOOR '_'
 #define DOT '.'
 #define SPACE ' '
+
+/* Players */
 #define PACMAN 1
 #define GHOST_1 2
 #define GHOST_2 3
@@ -55,81 +57,9 @@ typedef struct PLAYER PLAYER;
 char* getMap();
 void drawMap(char* map,int starty, int startx);
 PLAYER* initPlayer(int player, int startx, int starty);
-
+void drawPlayer(PLAYER* player);
 
 /* Functions implementation */
-
-PLAYER* initPlayer(int player, int startx, int starty) {
-
-    PLAYER * temp;
-    
-    if ( (temp = malloc(sizeof(PLAYER))) == NULL ){
-        perror("couldn't allocate memory for player");
-        exit(EXIT_FAILURE);
-    }
-    
-    start_color();
-    init_pair(PACMAN, COLOR_YELLOW, COLOR_BLACK);
-    init_pair(GHOST_1, COLOR_CYAN, COLOR_BLACK);
-    init_pair(GHOST_2, COLOR_RED, COLOR_BLACK);
-    init_pair(GHOST_3, COLOR_GREEN, COLOR_BLACK);
-    
-    move(starty,startx);
-    attron(A_BOLD);
-    switch(player)
-    {
-       case PACMAN:
-            temp->number = PACMAN;
-            temp->x = startx+Pacmanx;
-            temp->y = starty+Pacmany;
-            
-            move(temp->y, temp->x);
-            attron(COLOR_PAIR(1));
-            addch('O');
-            attroff(COLOR_PAIR(1));
-            break;
-            
-        case GHOST_1:
-            temp->number = GHOST_1;
-            temp->x = startx+Ghostx+2;
-            temp->y = starty+Ghosty-1;
-            
-            move(temp->y, temp->x);
-            attron(COLOR_PAIR(2));
-            addch('M');
-            attroff(COLOR_PAIR(2));
-            break;
-            
-       case GHOST_2:
-            temp->number = GHOST_2;
-            temp->x = startx+Ghostx;
-            temp->y = starty+Ghosty;
-            
-            move(temp->y, temp->x);
-            attron(COLOR_PAIR(3));
-            addch('M');
-            attroff(COLOR_PAIR(3));
-            break; 
-           
-       case GHOST_3:
-            temp->number = GHOST_3;
-            temp->x = startx+Ghostx+4;
-            temp->y = starty+Ghosty;
-            
-            move(temp->y, temp->x);
-            attron(COLOR_PAIR(4));
-            addch('M');
-            attroff(COLOR_PAIR(4));
-            break;
-    }
-    
-    attroff(A_BOLD);
-    move(starty, startx);
-    refresh();
-    
-    return temp;
-}
-
 char* getMap()
 {
     char* mapString = (char *)malloc(sizeof(char) * MAP_ROWS*MAP_COLS);
@@ -227,7 +157,69 @@ void drawMap(char* map,int starty, int startx)
     refresh();
 }
 
+PLAYER* initPlayer(int player, int startx, int starty)
+{
 
+    PLAYER * temp;
+    
+    if ( (temp = malloc(sizeof(PLAYER))) == NULL ){
+        perror("couldn't allocate memory for player");
+        exit(EXIT_FAILURE);
+    }
+    
+    switch(player)
+    {
+       case PACMAN:
+            temp->number = PACMAN;
+            temp->x = startx+Pacmanx;
+            temp->y = starty+Pacmany;
+            break;
+            
+        case GHOST_1:
+            temp->number = GHOST_1;
+            temp->x = startx+Ghostx+2;
+            temp->y = starty+Ghosty-1;
+            break;
+            
+       case GHOST_2:
+            temp->number = GHOST_2;
+            temp->x = startx+Ghostx;
+            temp->y = starty+Ghosty;
+            break; 
+           
+       case GHOST_3:
+            temp->number = GHOST_3;
+            temp->x = startx+Ghostx+4;
+            temp->y = starty+Ghosty;
+            break;
+    }
+    return temp;
+}
+
+void drawPlayer(PLAYER* player)
+{
+    start_color();
+    init_pair(PACMAN, COLOR_YELLOW, COLOR_BLACK);
+    init_pair(GHOST_1, COLOR_CYAN, COLOR_BLACK);
+    init_pair(GHOST_2, COLOR_RED, COLOR_BLACK);
+    init_pair(GHOST_3, COLOR_GREEN, COLOR_BLACK);
+    
+    move(player->y, player->x);
+    attron(A_BOLD);
+    attron(COLOR_PAIR(player->number));
+    
+    if (player->number == PACMAN)
+        addch('O');
+    else
+        addch('M');
+        
+    attroff(COLOR_PAIR(player->number));
+    attroff(A_BOLD);
+    refresh();
+}
+
+
+#endif  /* MAP_H  */
 
 
 #endif  /* MAP_H  */
