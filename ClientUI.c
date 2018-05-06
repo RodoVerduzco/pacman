@@ -23,24 +23,13 @@
 *
 */
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <time.h>
-
-#include <signal.h>
-#include <sys/time.h>
-#include <curses.h>
-
 #include "ClientUI.h"
 
-WINDOW * mainwin;
-char * map;
-int oldcur;
 
 /* Empty function to avoid warnings*/
 void gameInit()
 {
-  	int startx, starty;
+    int startx, starty;
 	int ch;
 	map = getMap();
 
@@ -54,12 +43,14 @@ void gameInit()
 
 	starty = (LINES - MAP_ROWS) / 2;	// Calculating for a center placement
 	startx = (COLS - MAP_COLS) / 2;	// of the window
-	refresh();
+	
 	drawMap(map, starty, startx);
-	//starty = starty-startx;
-	//move(starty, starty);
-	//addch('*');
+	pacman = initPlayer(PACMAN, startx, starty);
+	ghost1 = initPlayer(GHOST_1, startx, starty);
+	ghost2 = initPlayer(GHOST_2, startx, starty);
+	ghost3 = initPlayer(GHOST_3, startx, starty);
     
     getch();			// Wait for user input
 	endwin();			// End curses mode	
+    return EXIT_SUCCESS;
 }
