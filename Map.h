@@ -16,8 +16,15 @@
 #include <curses.h>
 
 /*  Macros  */
-#define MAP_COLS 54
+#define MAP_COLS 53
 #define MAP_ROWS 21
+#define WALL '#'
+#define WALL_X 'x'
+#define DOOR '_'
+#define DOT '.'
+#define SPACE ' '
+#define GHOST 'M'
+#define PACMAN 'O'
 
 /*  Function prototypes  */
 char* getMap();
@@ -38,7 +45,7 @@ char* getMap()
 ##x.........x#########x.x###x.x#########x.........x##\
 ####x.x###x.x#########x.x###x.x#########x.x####x.x###\
 ####x.x###x.x###x...................x###x.x####x.x###\
-####x.x###x.x###x.x######   ######x.x###x.x####x.x###\
+####x.x###x.x###x.x######___######x.x###x.x####x.x###\
 ####x.x###x.x###x.x###         ###x.x###x.x####x.x###\
 ##x...............x###         ###x...............x##\
 ##x.x#####x.x###x.x###############x.x###x.x#####x.x##\
@@ -54,27 +61,72 @@ char* getMap()
 }
 
 void drawMap(char* map,int starty, int startx)
-{	
-	int i, j;
-	int tempy = starty;
-	int tempx = startx;
-	j = MAP_COLS;
-	
-    for (i = 0; i < (MAP_ROWS*MAP_COLS)-21; i++)
+{   
+    int i, j;
+    int tempy = starty;
+    int tempx = startx;
+    j = MAP_COLS;
+    
+    if (!has_colors())
+    {   endwin();
+        printf("Your terminal does not support color\n");
+        exit(1);
+    }
+    
+    start_color();
+    init_pair(1, COLOR_BLACK, COLOR_BLACK); //color for 'x'
+    init_pair(2, COLOR_BLUE, COLOR_BLACK); // color for '#'
+    init_pair(3, COLOR_BLACK, COLOR_BLACK); // background color for ' '
+    init_pair(4, COLOR_WHITE, COLOR_BLACK); // color for '.'
+    
+    for (i = 0; i < (MAP_ROWS*MAP_COLS)-1; i++)
     {
-    	move(tempy, tempx);
-		addch(map[i]);
-    	if ((i+1) == j-1)
-    	{
-    		tempx = startx;
-    		tempy += 1;
-    		j += (MAP_COLS)-1;
-    	}
-    	else
-    		tempx += 1;
+        
+        move(tempy, tempx);
+        switch(map[i])
+        {
+           case WALL_X:
+                attron(COLOR_PAIR(1));
+                addch(map[i]);
+                attroff(COLOR_PAIR(1));
+                break;
+                
+            case WALL:
+                attron(COLOR_PAIR(2));
+                addch(map[i]);
+                attroff(COLOR_PAIR(2));
+                break;
+                
+           case DOOR:
+                attron(COLOR_PAIR(2));
+                addch(map[i]);
+                attroff(COLOR_PAIR(2));
+                break; 
+               
+           case SPACE:
+                attron(COLOR_PAIR(3));
+                addch(map[i]);
+                attroff(COLOR_PAIR(3));
+                break;
+           
+           default:
+                attron(COLOR_PAIR(4));
+                addch(map[i]);
+                attroff(COLOR_PAIR(4));
+                break;
+        }
+        
+        if ((i+1) == j-1)
+        {
+            tempx = startx;
+            tempy += 1;
+            j += (MAP_COLS);
+        }
+        else
+            tempx += 1;
     }
 
-	refresh();
+    refresh();
 }
 
 
