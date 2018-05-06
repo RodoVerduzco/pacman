@@ -26,8 +26,9 @@
 #ifndef CLIENTUI_H
 #define CLIENTUI_H
 
+#include "Map.h"
 #include "error.h"
 
-void empty();
+void gameInit();
 
 #endif /* CLIENTUI_H */
