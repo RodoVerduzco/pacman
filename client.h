@@ -1,3 +1,8 @@
+/*
+ *    The main client helper program for a multiplayer Pacman game.
+ *    Written by Ludovic Cyril Michel, Rodolfo Verduzco and Cynthia Castillo.
+ */
+
 #ifndef CLIENT_H
 #define CLIENT_H
 

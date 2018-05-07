@@ -1,9 +1,15 @@
+/*
+ *    The program that defines the game structures.
+ *    Written by Ludovic Cyril Michel, Rodolfo Verduzco and Cynthia Castillo.
+ */
+
 #ifndef SERVER_TYPES_H
 #define SERVER_TYPES_H
-#define PLAYER_NUM 4
+#define PLAYER_NUM 2
 
 #include <pthread.h>
 
+// Player data Struct
 typedef struct {
   char name[50];
   int score;
@@ -11,6 +17,7 @@ typedef struct {
   int y;
 } player_data_t;
 
+// Game State Struct
 typedef struct {
   int player_count;
   int pacman_id;
@@ -20,6 +27,7 @@ typedef struct {
   pthread_mutex_t player_data_lock;
 } game_state_t;
 
+// Struct to be received by thread
 typedef struct {
   int client_fd;
   int player_id;

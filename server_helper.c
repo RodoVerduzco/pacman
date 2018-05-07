@@ -1,12 +1,22 @@
+/*
+ *    The program that handles the User Interace of the pacman game.
+ *    Written by Ludovic Cyril Michel, Rodolfo Verduzco and Cynthia Castillo.
+ */
+
 #include "server_helper.h"
 
+/*
+  This function handles the pacman game
+*/
 void play_pacman(int client_fd, int player_id, game_state_t *game_state) {
   char *data = (char *)malloc(sizeof(char) * BUFFER_SIZE);
   int pacman_id;
 
+  //Client connection
   handle_init_request(client_fd, player_id, game_state, data);
 
   while (1) {
+    // State updates
     handle_game_requests(client_fd, player_id, game_state, data);
 
     pthread_mutex_lock(&game_state->pacman_id_lock);
@@ -29,6 +39,9 @@ void play_pacman(int client_fd, int player_id, game_state_t *game_state) {
   free(data);
 }
 
+/*
+  Handle the initial request of the client to prepare the game
+*/
 void handle_init_request(int client_fd, int player_id, game_state_t *game_state,
                          char *data) {
   int type;
@@ -69,6 +82,7 @@ void handle_init_request(int client_fd, int player_id, game_state_t *game_state,
     // handle game error
   }
 
+  // New player added
   pthread_mutex_lock(&game_state->player_count_lock);
   game_state->player_count++;
   pthread_mutex_unlock(&game_state->player_count_lock);
@@ -88,6 +102,9 @@ void handle_init_request(int client_fd, int player_id, game_state_t *game_state,
   fflush(stdout);
 }
 
+/*
+  Handle the normal game requests
+*/
 void handle_game_requests(int client_fd, int player_id,
                           game_state_t *game_state, char *data) {
   int pacman_id;
@@ -127,6 +144,7 @@ void handle_game_requests(int client_fd, int player_id,
 
       fflush(stdout);
 
+      // The player moved, need tho update the state
       if (type == MOVE) {
         parse_change_request(data, &x, &y);
 
@@ -160,7 +178,9 @@ void handle_game_requests(int client_fd, int player_id,
         fflush(stdout);
 
         break;
-      } else {
+      }
+      // Client sent OK, must send game state 
+      else {
         stringify_game_state(game_state, data);
 
         if (send_response(client_fd, CHANGE, data)) {

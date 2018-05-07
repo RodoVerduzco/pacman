@@ -1,6 +1,6 @@
 /*
   A server program for a multiplayer Pacman game.
-  Written by Ludovic Cyril Michel, Rodolfo Verduzco and Cynthia.
+  Written by Ludovic Cyril Michel, Rodolfo Verduzco and Cynthia Castillo.
 */
 
 #include "server.h"

@@ -1,5 +1,12 @@
+/*
+ *    The program that handles main game state of the pacman game.
+ *    Written by Ludovic Cyril Michel, Rodolfo Verduzco and Cynthia Castillo.
+ */
 #include "game.h"
 
+/*
+  Set the initial state of the game
+*/
 game_state_t *init_game_state() {
   game_state_t *game_state = (game_state_t *)malloc(sizeof(game_state_t));
 
@@ -21,6 +28,9 @@ game_state_t *init_game_state() {
   return game_state;
 }
 
+/*
+  Check coordinates of a given player
+*/
 int check_coordinates(game_state_t *game_state, int player_id, int x, int y) {
   if (!check_displacement(game_state, player_id, x, y)) {
     return 0;
@@ -28,6 +38,9 @@ int check_coordinates(game_state_t *game_state, int player_id, int x, int y) {
   return check_other_players(game_state, player_id, x, y);
 }
 
+/*
+  Check the correct displacement of the players
+*/
 int check_displacement(game_state_t *game_state, int player_id, int x, int y) {
   int displacement = 0;
   displacement += abs(x - game_state->player_data[player_id].x);
@@ -35,11 +48,15 @@ int check_displacement(game_state_t *game_state, int player_id, int x, int y) {
   return displacement <= 1;
 }
 
+/*
+  Check the coordinates of the other players
+*/
 int check_other_players(game_state_t *game_state, int player_id, int x, int y) {
   int other_player_x;
   int other_player_y;
   int pacman_id = game_state->pacman_id;
 
+  // Go through every player
   for (int i = 0; i < PLAYER_NUM; i++) {
     other_player_x = game_state->player_data[i].x;
     other_player_y = game_state->player_data[i].y;
@@ -55,6 +72,9 @@ int check_other_players(game_state_t *game_state, int player_id, int x, int y) {
   return 1;
 }
 
+/*
+  Reset the player coordinates
+*/
 void reset_coordinates(game_state_t *game_state) {
   pthread_mutex_lock(&game_state->player_data_lock);
   for (int i = 0; i < PLAYER_NUM; i++) {

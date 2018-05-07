@@ -4,6 +4,10 @@
  */
 #include "client.h"
 
+/*  *  *  *  *  *  *  */
+/*  Main entry point  */
+/*  *  *  *  *  *  *  */
+
 int main(int argc, char *argv[]) {
   int connection_fd;
   // show program usage
@@ -19,7 +23,9 @@ int main(int argc, char *argv[]) {
 
   return 0;
 }
-
+/*
+  This Function opens the socket to the server.
+*/
 int open_socket(char *address, char *port) {
   struct addrinfo hints;
   struct addrinfo *server_info = NULL;
@@ -59,6 +65,10 @@ int open_socket(char *address, char *port) {
   return connection_fd;
 }
 
+/*
+  This function sends the data request though the sockets
+  to the server
+*/
 void send_request(char *buffer, int connection_fd) {
   // send
   if (send(connection_fd, buffer, strlen(buffer) + 1, 0) == -1) {
@@ -67,6 +77,12 @@ void send_request(char *buffer, int connection_fd) {
   printf("sent %s\n", buffer);
 }
 
+/*
+  This function handles the received response by the server
+  and prints it.
+  
+      ** USED FOR DEBUG PURPOSES **
+*/
 void print_response(char *response, char *buffer, int connection_fd) {
   int response_size;
   bzero(buffer, BUFFER_SIZE);
@@ -81,6 +97,10 @@ void print_response(char *response, char *buffer, int connection_fd) {
   printf("received %s\n", buffer);
 }
 
+/*
+  This function is a game testing function
+      ** USED FOR DEBUG PURPOSES **
+*/
 int test(int connection_fd) {
   char *buffer = (char *)malloc(BUFFER_SIZE);
   char *response = (char *)malloc(BUFFER_SIZE);

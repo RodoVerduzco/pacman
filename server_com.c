@@ -1,5 +1,14 @@
+/*
+ *    The program that performs the server communication with the client
+ *    Written by Ludovic Cyril Michel, Rodolfo Verduzco and Cynthia Castillo.
+ */
+
 #include "server_com.h"
 
+/*
+  This function receives the client request, and saves
+  the request to 'data'
+ */
 int get_request(int client_fd, int *type, char *data) {
   char buffer[BUFFER_SIZE];
 
@@ -21,6 +30,9 @@ int get_request(int client_fd, int *type, char *data) {
   return 0;
 }
 
+/*
+  This function sends a response to the client.
+ */
 int send_response(int client_fd, int type, char *data) {
   char buffer[BUFFER_SIZE];
 
@@ -45,10 +57,15 @@ int send_response(int client_fd, int type, char *data) {
   return 0;
 }
 
+/*
+  This function sets the poll to await for the clients
+  request.
+ */
 int await_request(int client_fd) {
   struct pollfd poll_fds[1];
   int poll_result;
 
+  // Fill the poll structure
   poll_fds[0].fd = client_fd;
   poll_fds[0].events = POLLIN;
 
@@ -63,10 +80,15 @@ int await_request(int client_fd) {
   return 0;
 }
 
+/*
+  This function converts the game state to the string that will
+  be the response to the client.
+ */
 void stringify_game_state(game_state_t *game_state, char *data) {
   char temp[BUFFER_SIZE] = "\0";
   bzero(data, BUFFER_SIZE);
 
+  // Stringify the state being consistent with the data.
   pthread_mutex_lock(&game_state->player_data_lock);
   for (int player_id = 0; player_id < PLAYER_NUM; player_id++) {
     sprintf(temp, "%d %s %d %d %d ", player_id,
@@ -79,6 +101,9 @@ void stringify_game_state(game_state_t *game_state, char *data) {
   pthread_mutex_unlock(&game_state->player_data_lock);
 }
 
+/*
+  this function parses the change request into a string
+ */
 void parse_change_request(char *data, int *x, int *y) {
   sscanf(data, "%d %d", x, y);
 }
