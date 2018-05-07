@@ -63,12 +63,13 @@ int await_request(int client_fd) {
   return 0;
 }
 
-void stringify_game_state(game_state_t *game_state, char *data) {
+void stringify_game_state(game_state_t *game_state, int player_num,
+                          char *data) {
   char temp[BUFFER_SIZE] = "\0";
   bzero(data, BUFFER_SIZE);
 
   pthread_mutex_lock(&game_state->player_data_lock);
-  for (int player_id = 0; player_id < PLAYER_NUM; player_id++) {
+  for (int player_id = 0; player_id < player_num; player_id++) {
     sprintf(temp, "%d %s %d %d %d ", player_id,
             (game_state->player_data + player_id)->name,
             (game_state->player_data + player_id)->score,

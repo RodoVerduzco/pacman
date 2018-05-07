@@ -1,24 +1,25 @@
 #include "server_helper.h"
 
-void play_pacman(int client_fd, int player_id, game_state_t *game_state) {
+void play_pacman(int client_fd, int player_num, int player_id,
+                 game_state_t *game_state) {
   char *data = (char *)malloc(sizeof(char) * BUFFER_SIZE);
   int pacman_id;
 
-  handle_init_request(client_fd, player_id, game_state, data);
+  handle_init_request(client_fd, player_num, player_id, game_state, data);
 
   while (1) {
-    handle_game_requests(client_fd, player_id, game_state, data);
+    handle_game_requests(client_fd, player_num, player_id, game_state, data);
 
     pthread_mutex_lock(&game_state->pacman_id_lock);
     pacman_id = game_state->pacman_id;
     pthread_mutex_unlock(&game_state->pacman_id_lock);
 
-    if (pacman_id >= PLAYER_NUM) {
+    if (pacman_id >= player_num) {
       break;
     }
   }
 
-  stringify_game_state(game_state, data);
+  stringify_game_state(game_state, player_num, data);
 
   if (send_response(client_fd, GAMEOVER, data)) {
     // handle game error
@@ -29,8 +30,8 @@ void play_pacman(int client_fd, int player_id, game_state_t *game_state) {
   free(data);
 }
 
-void handle_init_request(int client_fd, int player_id, game_state_t *game_state,
-                         char *data) {
+void handle_init_request(int client_fd, int player_num, int player_id,
+                         game_state_t *game_state, char *data) {
   int type;
   int player_count;
 
@@ -78,7 +79,7 @@ void handle_init_request(int client_fd, int player_id, game_state_t *game_state,
     player_count = game_state->player_count;
     pthread_mutex_unlock(&game_state->player_count_lock);
 
-    if (player_count == PLAYER_NUM) {
+    if (player_count == player_num) {
       break;
     }
   }
@@ -88,7 +89,7 @@ void handle_init_request(int client_fd, int player_id, game_state_t *game_state,
   fflush(stdout);
 }
 
-void handle_game_requests(int client_fd, int player_id,
+void handle_game_requests(int client_fd, int player_num, int player_id,
                           game_state_t *game_state, char *data) {
   int pacman_id;
   int current_pacman_id;
@@ -107,7 +108,7 @@ void handle_game_requests(int client_fd, int player_id,
 
   // send first response
 
-  stringify_game_state(game_state, data);
+  stringify_game_state(game_state, player_num, data);
 
   if (send_response(client_fd, CHANGE, data)) {
     // handle game error
@@ -120,59 +121,57 @@ void handle_game_requests(int client_fd, int player_id,
     if (await_request(client_fd)) {
       if (get_request(client_fd, &type, data) == -1) {
         // handle game error
-        printf("Error: receive OK");
-      }
+        printf("error communicating with player %d", player_id);
+      } else {
+        printf("got %d", type);
 
-      printf("got %d", type);
+        fflush(stdout);
 
-      fflush(stdout);
+        if (type == MOVE) {
+          parse_change_request(data, &x, &y);
 
-      if (type == MOVE) {
-        parse_change_request(data, &x, &y);
+          pthread_mutex_lock(&game_state->pacman_id_lock);
+          pthread_mutex_lock(&game_state->player_data_lock);
+          validation_result =
+              check_coordinates(game_state, player_num, player_id, x, y);
+          if (validation_result == 2) {
+            game_state->pacman_id++;
+          } else if (validation_result == 1 &&
+                     game_state->pacman_id == pacman_id) {
+            game_state->player_data[player_id].x = x;
+            game_state->player_data[player_id].y = y;
+            game_state->player_data[player_id].score++;
+          }
+          pthread_mutex_unlock(&game_state->player_data_lock);
+          pthread_mutex_unlock(&game_state->pacman_id_lock);
+        }
 
         pthread_mutex_lock(&game_state->pacman_id_lock);
-        pthread_mutex_lock(&game_state->player_data_lock);
-        validation_result = check_coordinates(game_state, player_id, x, y);
-        if (validation_result == 2) {
-          game_state->pacman_id++;
-        } else if (validation_result == 1 &&
-                   game_state->pacman_id == pacman_id) {
-          game_state->player_data[player_id].x = x;
-          game_state->player_data[player_id].y = y;
-          game_state->player_data[player_id].score++;
-        }
-        pthread_mutex_unlock(&game_state->player_data_lock);
+        current_pacman_id = game_state->pacman_id;
         pthread_mutex_unlock(&game_state->pacman_id_lock);
-      }
 
-      pthread_mutex_lock(&game_state->pacman_id_lock);
-      current_pacman_id = game_state->pacman_id;
-      pthread_mutex_unlock(&game_state->pacman_id_lock);
+        if (current_pacman_id != pacman_id) {
+          reset_coordinates(game_state, player_num);
 
-      if (current_pacman_id != pacman_id) {
-        reset_coordinates(game_state);
+          if (send_response(client_fd, WAIT, NULL)) {
+            // handle game error
+            printf("Error: send WAIT");
+          }
 
-        if (send_response(client_fd, WAIT, NULL)) {
-          // handle game error
-          printf("Error: send WAIT");
+          fflush(stdout);
+
+          break;
+        } else {
+          stringify_game_state(game_state, player_num, data);
+
+          if (send_response(client_fd, CHANGE, data)) {
+            // handle game error
+            printf("Error: send WAIT");
+          }
+
+          fflush(stdout);
         }
-
-        fflush(stdout);
-
-        break;
-      } else {
-        stringify_game_state(game_state, data);
-
-        if (send_response(client_fd, CHANGE, data)) {
-          // handle game error
-          printf("Error: send WAIT");
-        }
-
-        fflush(stdout);
       }
-
-    } else {
-      // client timed out
     }
   }
 }
