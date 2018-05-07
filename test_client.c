@@ -1,5 +1,4 @@
 #include "client.h"
-#include "ClientUI.h"
 
 #include "error.h"
 #include <arpa/inet.h>

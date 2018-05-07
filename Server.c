@@ -1,183 +1,169 @@
 /*
-*
-*   Program :   Server.c
-*
-*   Authors  :  Cynthia Berenice Castillo Millán
- *               A01374530
-*
-*               Ludovic
-*               A0
-*
-*               Jose Rodolfo Verduzco Torres
-*               A01366134
-*
-*
-*
-*   Purpose :
-*              This program is the server of a multiplayer pacman-style
-*              game using sockets.
-*
-*   Usage  :
-*              The program receives the connection from multiple clients
-*              and handles the pacman game
-*
-*
-*   Error handling:
-*               On any unrecoverable error, the program shows an error
-*               message, and exits.
-*
-*
+  A server program for a multiplayer Pacman game.
+  Written by Ludovic Cyril Michel, Rodolfo Verduzco and Cynthia.
 */
 
-/* Custom libraries */
-#include "Server_Helper.h"
+#include "server.h"
 
-/*   *   *   *   *   *   *   *   *   *   *   *   *   *   */
-/*               Function Declarations                   */
-/*   *   *   *   *   *   *   *   *   *   *   *   *   *   */
+int main(int argc, char *argv[]) {
+  int server_fd;
 
-void usage(char * program);
-void printLocalIPs();
-void waitForConnections(int server_fd, game_t * game, locks_t * data_locks);
-void attendRequest(int client_fd, int port);
+  // check the correct arguments
+  if (argc != 2) {
+    print_usage_error(argv[0], "<port>");
+  }
 
-/*   *   *   *   *   *   *   *   *   *   *   *   *   *   */
-/*                 Main Entry Point                      */
-/*   *   *   *   *   *   *   *   *   *   *   *   *   *   */
+  // show the IPs assigned to this computer
+  print_ips();
 
-int main(int argc, char * argv[])
-{
-      int server_fd;
-      game_t game;
-      locks_t data_locks;
+  // start the server
+  server_fd = init_server(argv[1]);
 
-      printf("\n=== SERVER ===\n");
+  // listen for connections from the clients
+  create_games(server_fd);
 
-    /* Check the correct arguments */
-      if (argc != 2)
-      {
-          usage(argv[0]);
-          fatalErrorMsg("main","Incorrect Number of parameters");
-      }
+  // close the socket
+  close(server_fd);
 
-    /* Initialize the data structures */
-        initGame(&game, &data_locks);
+  // finish the main thread
+  pthread_exit(NULL);
 
-  	/* Show the IPs assigned to this computer */
-  	  printLocalIPs();
-
-    /* Start the server */
-      server_fd = initServer(argv[1]);
-
-  	/* Listen for connections from the clients */
-      waitForConnections(server_fd, &game, &data_locks);
-
-    /* Close the socket */
-      close(server_fd);
-
-      return 0;
+  return 0;
 }
 
-/*   *   *   *   *   *   *   *   *   *   *   *   *   *   */
-/*               Function Definitions                    */
-/*   *   *   *   *   *   *   *   *   *   *   *   *   *   */
+void print_ips() {
+  struct ifaddrs *addrs;
+  struct ifaddrs *tmp;
 
-/*
- *
- *  Function: usage
- *
- *  Purpose: This Function shows the explanation to the
- *           user of the parameters required to run
- *           the program.
- *
- *  Parameters:
- *           Input   Strings with the name of the program
- *
- *           Output  Doesn't return anything, but exits the
- *                   program.
- */
-void usage(char * program)
-{
-    printf("Usage:\n");
-    printf("\t%s {port_number}\n", program);
+  // get the list of IP addresses used by this machine
+  getifaddrs(&addrs);
+  tmp = addrs;
+
+  printf("Server IP addresses:\n");
+
+  while (tmp) {
+    if (tmp->ifa_addr && tmp->ifa_addr->sa_family == AF_INET) {
+      // get the address structure casting as IPv4
+      struct sockaddr_in *pAddr = (struct sockaddr_in *)tmp->ifa_addr;
+      // print the IP address of the local machine
+      printf("%s: %s\n", tmp->ifa_name, inet_ntoa(pAddr->sin_addr));
+    }
+    // advance in the linked list
+    tmp = tmp->ifa_next;
+  }
+
+  freeifaddrs(addrs);
 }
 
-/*
-	Show the local IP addresses, to allow testing
-	Based on code from:
-		https://stackoverflow.com/questions/20800319/how-do-i-get-my-ip-address-in-c-on-linux
-*/
-void printLocalIPs()
-{
-	 struct ifaddrs * addrs;
-	 struct ifaddrs * tmp;
+int init_server(char *port) {
+  struct addrinfo hints;
+  struct addrinfo *server_info = NULL;
+  int server_fd;
+  int reuse = 1;
 
-	// Get the list of IP addresses used by this machine
-	 getifaddrs(&addrs);
-	 tmp = addrs;
+  // Prepare the hints structure
+  bzero(&hints, sizeof hints);
+  // Set to use IPv4
+  hints.ai_family = AF_INET;
+  // Set type of socket
+  hints.ai_socktype = SOCK_STREAM;
+  // Set to look for the address automatically
+  hints.ai_flags = AI_PASSIVE;
 
-   printf("Server IP addresses:\n");
+  // Use the presets to get the actual information for the socket
+  if (getaddrinfo(NULL, port, &hints, &server_info) == -1) {
+    print_network_error("getaddrinfo", 1);
+  }
 
-  	while (tmp)
-  	{
-  		if (tmp->ifa_addr && tmp->ifa_addr->sa_family == AF_INET)
-  		{
-  		  // Get the address structure casting as IPv4
-  			struct sockaddr_in *pAddr = (struct sockaddr_in *)tmp->ifa_addr;
-        // Print the ip address of the local machine
-  			printf("%s: %s\n", tmp->ifa_name, inet_ntoa(pAddr->sin_addr));
-  		}
-  		// Advance in the linked list
-  		tmp = tmp->ifa_next;
-  	}
+  // Open the socket using the information obtained
+  server_fd = socket(server_info->ai_family, server_info->ai_socktype,
+                     server_info->ai_protocol);
+  if (server_fd == -1) {
+    close(server_fd);
+    print_network_error("socket", 1);
+  }
 
-	freeifaddrs(addrs);
+  // Allow reuse of the same port even when the server does not close correctly
+  if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(int)) ==
+      -1) {
+    print_network_error("setsockopt", 1);
+  }
+
+  // Connect the port with the desired port
+  if (bind(server_fd, server_info->ai_addr, server_info->ai_addrlen) == -1) {
+    print_network_error("bind", 1);
+  }
+
+  // Start listening for incoming connections
+  if (listen(server_fd, MAX_QUEUE) == -1) {
+    print_network_error("listen", 1);
+  }
+
+  // Free the memory used for the address info
+  freeaddrinfo(server_info);
+
+  printf("Server ready\n");
+
+  return server_fd;
 }
 
-/*
-    Main loop to wait for incomming connections
-*/
-void waitForConnections(int server_fd, game_t * game, locks_t * data_locks)
-{
-    pthread_t new_tid;
-    thread_data_t * connection_data = NULL;
-    socklen_t client_address_size;
+void create_games(int server_fd) {
+  struct sockaddr_in client_address;
+  socklen_t client_address_size = sizeof(client_address);
+  char client_presentation[INET_ADDRSTRLEN];
 
-    struct sockaddr_in client_address;
-    char   client_presentation[INET_ADDRSTRLEN];
-    int    client_fd;
+  int client_fd;
+  pthread_t tid;
 
-    while (1)
-    {
+  game_state_t *game_state = init_game_state();
+  int player_id = 0;
 
-      /* CREATE A THREAD */
-        if(checkNumPlayers(game, data_locks) == 1)
-        {
-            // Get the size of the structure to store client information
-              client_address_size = sizeof client_address;
+  while (1) {
+    // wait for a client connection
+    client_fd = accept(server_fd, (struct sockaddr *)&client_address,
+                       &client_address_size);
+    if (client_fd == -1) {
+      print_network_error("accept", 0);
+    }
 
-            // Accept
-              client_fd = accept(server_fd, (struct sockaddr *)&client_address, &client_address_size);
+    // get the data from the client
+    inet_ntop(client_address.sin_family, &client_address.sin_addr,
+              client_presentation, sizeof client_presentation);
+    printf("Received incoming connection from %s on port %d\n",
+           client_presentation, client_address.sin_port);
 
-              if (client_fd == -1){
-                fatalError("ERROR: accept");
-              }
+    thread_data_t *thread_data = (thread_data_t *)malloc(sizeof(thread_data_t));
+    thread_data->client_fd = client_fd;
+    thread_data->player_id = player_id;
+    thread_data->game_state = game_state;
 
-          // Get the data from the client
-            inet_ntop(client_address.sin_family, &client_address.sin_addr, client_presentation, sizeof client_presentation);
-            printf("\nReceived incomming connection from %s on port %d\n", client_presentation, client_address.sin_port);
+    pthread_create(&tid, NULL, &handle_players, thread_data);
 
-            updateRunningThreads(1, game, data_locks);
+    player_id++;
 
-          // Allocate thread's structure
-            connection_data = (thread_data_t *) malloc(sizeof (thread_data_t ));
+    if (player_id >= PLAYER_NUM) {
+      game_state = init_game_state();
+      player_id = 0;
+    }
+  }
+}
 
-          // Prepare the structure to send to the thread
-            initializeStruct(connection_data, client_fd, game, data_locks);
+void *handle_players(void *arg) {
+  thread_data_t *thread_data = (thread_data_t *)arg;
+  int client_fd = thread_data->client_fd;
+  int player_id = thread_data->player_id;
+  game_state_t *game_state = thread_data->game_state;
 
-            int status = pthread_create(&new_tid, NULL, attentionThread, (void *)connection_data);
-            checkThreadStatus(status, new_tid);
+  play_pacman(client_fd, player_id, game_state);
 
-          }
-      }
+  // close the connection and free the memory
+  close(client_fd);
+  free(thread_data);
+
+  printf("thread ending");
+
+  fflush(stdout);
+
+  // exit
+  pthread_exit(NULL);
 }

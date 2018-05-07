@@ -1,29 +1,22 @@
-/*
-*
-*   Program :   Server_Com.h
-*
-*   Authors  :  Cynthia Berenice Castillo Millán
- *               A01374530
-*
-*               Ludovic
-*               A0
-*
-*               Jose Rodolfo Verduzco Torres
-*               A01366134
-*
-*   Purpose :
-*              This program handles the server comomunication with
-*              the client.
-*
-*/
-
 #ifndef SERVER_COM_H
 #define SERVER_COM_H
+#define BUFFER_SIZE 1024
+#define TIMEOUT 15000
 
-/* Custom Libraries */
-#include "Server_Helper.h"
+#include <arpa/inet.h>
+#include <string.h>
+#include <sys/poll.h>
 
-void sendStringServer(int connection_fd, char * buffer);
-int recvStringThread(int connection_fd, char * buffer);
+#include "error.h"
+#include "server_types.h"
 
-#endif /* SERVER_HELPER_H */
+typedef enum { INIT, MOVE, OK } request_t;
+typedef enum { WAIT, CHANGE, GAMEOVER } response_t;
+
+int get_request(int client_fd, int *type, char *data);
+int send_response(int client_fd, int type, char *data);
+int await_request(int client_fd);
+void stringify_game_state(game_state_t *game_state, char *data);
+void parse_change_request(char *data, int *x, int *y);
+
+#endif

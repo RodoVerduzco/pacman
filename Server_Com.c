@@ -1,56 +1,84 @@
-/*
-*
-*   Program :   Server_Com.c
-*
-*   Authors  :  Cynthia Berenice Castillo Millán
- *               A01374530
-*
-*               Ludovic
-*               A0
-*
-*               Jose Rodolfo Verduzco Torres
-*               A01366134
-*
-*   Purpose :
-*              This program handles the server comomunication with
-*              the client.
-*
-*   Usage  :
-*
-*
-*   Error handling:
-*               On any unrecoverable error, the program shows an error
-*               message, and exits.
-*
-*/
+#include "server_com.h"
 
-#include "Server_Com.h"
-/*
-    Send a message with error validation
-    Receive the file descriptor and the string pointer
-*/
-void sendStringServer(int connection_fd, char * buffer)
-{
-    // Send a message to the client, including an extra character for the '\0'
-    if ( send(connection_fd, buffer, strlen(buffer)+1, 0) == -1 )
-    {
-        fatalError("ERROR: send");
-    }
+int get_request(int client_fd, int *type, char *data) {
+  char buffer[BUFFER_SIZE];
+
+  // clean the buffer
+  bzero(buffer, BUFFER_SIZE);
+  bzero(data, BUFFER_SIZE);
+
+  // get the request and check for error cases
+  int request_size = recv(client_fd, buffer, BUFFER_SIZE, 0);
+  if (request_size == 0 || request_size == -1) {
+    print_network_error("recv", 0);
+    return -1;
+  }
+
+  // parse the data
+  sscanf(buffer, "%d %[^\t\n]", type, data);
+  printf("\nreceived %d %s", *type, data);
+
+  return 0;
 }
 
-int recvStringThread(int connection_fd, char * buffer)
-{
-    int chars_read;
+int send_response(int client_fd, int type, char *data) {
+  char buffer[BUFFER_SIZE];
 
-    chars_read = recv(connection_fd, buffer, BUFFER_SIZE, 0);
-    if (chars_read == -1)
-    {
-      fatalError("recv");
-      fatalErrorMsg("sendData/recv", "Couldn't receive the request from the server");
-    }
+  // clean the buffer
+  bzero(buffer, BUFFER_SIZE);
 
-    if(chars_read == 0)
-      return -1;
+  // concat the com code and the data
+  sprintf(buffer, "%d %s", type, data);
 
+  // send the response
+  if (send(client_fd, buffer, strlen(buffer) + 1, 0) == -1) {
+    print_network_error("send", 0);
+    return -1;
+  }
+
+  if (data != NULL) {
+    bzero(data, BUFFER_SIZE);
+  }
+
+  printf("\nsent");
+
+  return 0;
+}
+
+int await_request(int client_fd) {
+  struct pollfd poll_fds[1];
+  int poll_result;
+
+  poll_fds[0].fd = client_fd;
+  poll_fds[0].events = POLLIN;
+
+  poll_result = poll(poll_fds, 1, TIMEOUT);
+
+  if (poll_result == -1) {
+    print_network_error("poll", 0);
+  }
+  if (poll_fds[0].revents & POLLIN) {
     return 1;
+  }
+  return 0;
+}
+
+void stringify_game_state(game_state_t *game_state, char *data) {
+  char temp[BUFFER_SIZE] = "\0";
+  bzero(data, BUFFER_SIZE);
+
+  pthread_mutex_lock(&game_state->player_data_lock);
+  for (int player_id = 0; player_id < PLAYER_NUM; player_id++) {
+    sprintf(temp, "%d %s %d %d %d ", player_id,
+            (game_state->player_data + player_id)->name,
+            (game_state->player_data + player_id)->score,
+            (game_state->player_data + player_id)->x,
+            (game_state->player_data + player_id)->y);
+    strcat(data, temp);
+  }
+  pthread_mutex_unlock(&game_state->player_data_lock);
+}
+
+void parse_change_request(char *data, int *x, int *y) {
+  sscanf(data, "%d %d", x, y);
 }
