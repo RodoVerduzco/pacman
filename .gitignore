@@ -1,2 +1,5 @@
 .vscode
 *.o
+server
+test_client
+client
