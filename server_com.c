@@ -84,13 +84,14 @@ int await_request(int client_fd) {
   This function converts the game state to the string that will
   be the response to the client.
  */
-void stringify_game_state(game_state_t *game_state, char *data) {
+void stringify_game_state(game_state_t *game_state, int player_num,
+                          char *data) {
   char temp[BUFFER_SIZE] = "\0";
   bzero(data, BUFFER_SIZE);
 
   // Stringify the state being consistent with the data.
   pthread_mutex_lock(&game_state->player_data_lock);
-  for (int player_id = 0; player_id < PLAYER_NUM; player_id++) {
+  for (int player_id = 0; player_id < player_num; player_id++) {
     sprintf(temp, "%d %s %d %d %d ", player_id,
             (game_state->player_data + player_id)->name,
             (game_state->player_data + player_id)->score,

@@ -5,7 +5,6 @@
 
 #ifndef SERVER_TYPES_H
 #define SERVER_TYPES_H
-#define PLAYER_NUM 2
 
 #include <pthread.h>
 
@@ -30,6 +29,7 @@ typedef struct {
 // Struct to be received by thread
 typedef struct {
   int client_fd;
+  int player_num;
   int player_id;
   game_state_t *game_state;
 } thread_data_t;

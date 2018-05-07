@@ -9,8 +9,8 @@ int main(int argc, char *argv[]) {
   int server_fd;
 
   // check the correct arguments
-  if (argc != 2) {
-    print_usage_error(argv[0], "<port>");
+  if (argc != 3) {
+    print_usage_error(argv[0], "<port> <player_num>");
   }
 
   // show the IPs assigned to this computer
@@ -20,7 +20,7 @@ int main(int argc, char *argv[]) {
   server_fd = init_server(argv[1]);
 
   // listen for connections from the clients
-  create_games(server_fd);
+  create_games(server_fd, atoi(argv[2]));
 
   // close the socket
   close(server_fd);
@@ -107,7 +107,7 @@ int init_server(char *port) {
   return server_fd;
 }
 
-void create_games(int server_fd) {
+void create_games(int server_fd, int player_num) {
   struct sockaddr_in client_address;
   socklen_t client_address_size = sizeof(client_address);
   char client_presentation[INET_ADDRSTRLEN];
@@ -115,7 +115,7 @@ void create_games(int server_fd) {
   int client_fd;
   pthread_t tid;
 
-  game_state_t *game_state = init_game_state();
+  game_state_t *game_state = init_game_state(player_num);
   int player_id = 0;
 
   while (1) {
@@ -134,6 +134,7 @@ void create_games(int server_fd) {
 
     thread_data_t *thread_data = (thread_data_t *)malloc(sizeof(thread_data_t));
     thread_data->client_fd = client_fd;
+    thread_data->player_num = player_num;
     thread_data->player_id = player_id;
     thread_data->game_state = game_state;
 
@@ -141,8 +142,8 @@ void create_games(int server_fd) {
 
     player_id++;
 
-    if (player_id >= PLAYER_NUM) {
-      game_state = init_game_state();
+    if (player_id >= player_num) {
+      game_state = init_game_state(player_num);
       player_id = 0;
     }
   }
@@ -151,10 +152,11 @@ void create_games(int server_fd) {
 void *handle_players(void *arg) {
   thread_data_t *thread_data = (thread_data_t *)arg;
   int client_fd = thread_data->client_fd;
+  int player_num = thread_data->player_num;
   int player_id = thread_data->player_id;
   game_state_t *game_state = thread_data->game_state;
 
-  play_pacman(client_fd, player_id, game_state);
+  play_pacman(client_fd, player_num, player_id, game_state);
 
   // close the connection and free the memory
   close(client_fd);

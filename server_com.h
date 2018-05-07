@@ -25,7 +25,7 @@ typedef enum { WAIT, CHANGE, GAMEOVER } response_t;
 int get_request(int client_fd, int *type, char *data);
 int send_response(int client_fd, int type, char *data);
 int await_request(int client_fd);
-void stringify_game_state(game_state_t *game_state, char *data);
+void stringify_game_state(game_state_t *game_state, int player_num, char *data);
 void parse_change_request(char *data, int *x, int *y);
 
 #endif  /* SERVER_COM_H */
