@@ -1,13 +1,12 @@
 
-OBJECTS = error.o server_com.o server_helper.o game.o ClientUI.o
-DEPENDS = error.c server_com.c server_helper.c game.c ClientUI.c
+OBJECTS = error.o server_com.o server_helper.o game.o ClientUI.o Map.o
+DEPENDS = error.h server_com.h server_helper.h game.h ClientUI.h Map.h
 TEST_CLIENT = test_client
 CLIENT = client
 SERVER = server
-
 CC = gcc
 CFLAGS = -Wall -g -std=gnu99 -pedantic
-LDLIBS = -lm -lncurses
+LDLIBS = -lm -lncurses -lpthread
 
 # default
 all: $(TEST_CLIENT) $(CLIENT) $(SERVER)
