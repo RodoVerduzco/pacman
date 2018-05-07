@@ -1,21 +1,8 @@
+/*
+ *    The main client program for a multiplayer Pacman game.
+ *    Written by Ludovic Cyril Michel, Rodolfo Verduzco and Cynthia Castillo.
+ */
 #include "client.h"
-#include "ClientUI.h"
-
-#include "error.h"
-#include <arpa/inet.h>
-#include <ifaddrs.h>
-#include <netdb.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-
-#define BUFFER_SIZE 1024
-
-int open_socket(char *address, char *port);
-void send_request(char *buffer, int connection_fd);
-void print_response(char *response, char *buffer, int connection_fd);
-int test(int connection_fd);
 
 int main(int argc, char *argv[]) {
   int connection_fd;
