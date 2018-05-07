@@ -14,6 +14,7 @@
 #define MAP_H
 
 #include <curses.h>
+#include <stdlib.h>
 
 /* **** Macros***  */
 #define MAP_COLS 53
@@ -57,3 +58,5 @@ char *getMap();
 void drawMap(char *map, int starty, int startx);
 PLAYER *initPlayer(int player, int startx, int starty);
 void drawPlayer(PLAYER *player);
+
+#endif
