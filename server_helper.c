@@ -5,6 +5,16 @@
 
 #include "server_helper.h"
 
+pthread_mutex_t running_mutex = PTHREAD_MUTEX_INITIALIZER;
+int running_threads = 0;
+int interrupted = 0;
+
+void onInterrupt(int signal)
+{
+  interrupted = 1;
+  printf("\nTHE GAME WAS INTERRUPTED\n");
+}
+
 /*
   This function handles the pacman game
 */
@@ -31,11 +41,47 @@ void play_pacman(int client_fd, int player_num, int player_id,
 
   if (send_response(client_fd, GAMEOVER, data)) {
     // handle game error
-    printf("Error: send WAIT");
+    printf("Error: send WAIT\n");
   }
 
   fflush(stdout);
   free(data);
+}
+
+/*
+  Increment the running thread counter
+*/
+void addRunningThread()
+{
+  pthread_mutex_lock(&running_mutex);
+  running_threads++;
+  pthread_mutex_unlock(&running_mutex);
+}
+
+int getRunningThreads()
+{
+  int threads;
+  pthread_mutex_lock(&running_mutex);
+  threads = running_threads;
+  pthread_mutex_unlock(&running_mutex);
+  return threads;
+}
+
+int getInterrupted()
+{
+  return interrupted;
+}
+
+void freeThread(game_state_t *game_state)
+{
+  pthread_mutex_lock(&running_mutex);
+    running_threads--;
+    if(running_threads<0)
+      running_threads = 0;
+  pthread_mutex_unlock(&running_mutex);
+  printf("NUM THREADS %d %d\n", running_threads, getInterrupted());
+  if(running_threads ==0 && getInterrupted()==1)
+    exit(EXIT_SUCCESS);
 }
 
 /*
@@ -49,12 +95,12 @@ void handle_init_request(int client_fd, int player_num, int player_id,
   // get initial request
   if (get_request(client_fd, &type, data) == -1) {
     // handle game error
-    printf("Error: receive INIT");
+    printf("Error: receive INIT\n");
   }
 
   if (type != INIT) {
     // handle game error
-    printf("Error: not INIT request");
+    printf("Error: not INIT request\n");
   }
 
   fflush(stdout);
@@ -66,7 +112,7 @@ void handle_init_request(int client_fd, int player_num, int player_id,
 
   if (send_response(client_fd, WAIT, data)) {
     // handle game error
-    printf("Error: send WAIT");
+    printf("Error: send WAIT\n");
   }
 
   fflush(stdout);
@@ -74,7 +120,7 @@ void handle_init_request(int client_fd, int player_num, int player_id,
   // get initial request
   if (get_request(client_fd, &type, data) == -1) {
     // handle game error
-    printf("Error: receive OK");
+    printf("Error: receive OK\n");
   }
 
   if (type != OK) {
@@ -127,7 +173,7 @@ void handle_game_requests(int client_fd, int player_num, int player_id,
 
   if (send_response(client_fd, CHANGE, data)) {
     // handle game error
-    printf("Error: send WAIT");
+    printf("Error: send WAIT\n");
   }
 
   fflush(stdout);
@@ -138,9 +184,10 @@ void handle_game_requests(int client_fd, int player_num, int player_id,
         // handle game error
         printf("error communicating with player %d", player_id);
       } else {
-        printf("got %d", type);
+        printf(" got %d\n", type);
 
         fflush(stdout);
+
 
         // The player moved, need tho update the state
         if (type == MOVE) {
@@ -171,25 +218,31 @@ void handle_game_requests(int client_fd, int player_num, int player_id,
 
           if (send_response(client_fd, WAIT, NULL)) {
             // handle game error
-            printf("Error: send WAIT");
+            printf("Error: send WAIT\n");
           }
 
           fflush(stdout);
 
           break;
         }
-        // Client sent OK, must send game state 
+        // Client sent OK, must send game state
         else {
           stringify_game_state(game_state, player_num, data);
 
           if (send_response(client_fd, CHANGE, data)) {
             // handle game error
-            printf("Error: send WAIT");
+            printf("Error: send WAIT\n");
           }
 
           fflush(stdout);
         }
       }
+    }
+
+    // Server INTERRUPTED
+    if(interrupted == 1){
+      send_response(client_fd, ERROR, NULL);
+      pthread_exit(NULL);
     }
   }
 }

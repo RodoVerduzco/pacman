@@ -20,7 +20,7 @@
   Communication protocol explained in the documentation
 */
 typedef enum { INIT, MOVE, OK } request_t;
-typedef enum { WAIT, CHANGE, GAMEOVER } response_t;
+typedef enum { WAIT, CHANGE, GAMEOVER, ERROR } response_t;
 
 int get_request(int client_fd, int *type, char *data);
 int send_response(int client_fd, int type, char *data);

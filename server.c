@@ -13,6 +13,7 @@ int main(int argc, char *argv[]) {
     print_usage_error(argv[0], "<port> <player_num>");
   }
 
+  setupHandlers();
   // show the IPs assigned to this computer
   print_ips();
 
@@ -29,6 +30,26 @@ int main(int argc, char *argv[]) {
   pthread_exit(NULL);
 
   return 0;
+}
+
+// Modify the signal handlers for specific events
+void setupHandlers()
+{
+    struct sigaction new_action;
+
+    // Change the action for the Ctrl-C input (SIGINT)
+    new_action.sa_handler = onInterrupt;
+    // Set the mask to the empty set
+    if ( sigemptyset(&new_action.sa_mask) == -1 )
+    {
+        perror("ERROR: sigemptyset");
+        exit(EXIT_FAILURE);
+    }
+    if ( sigaction(SIGINT, &new_action, NULL) == -1 )
+    {
+        perror("ERROR: sigaction");
+        exit(EXIT_FAILURE);
+    }
 }
 
 void print_ips() {
@@ -119,6 +140,7 @@ void create_games(int server_fd, int player_num) {
   int player_id = 0;
 
   while (1) {
+
     // wait for a client connection
     client_fd = accept(server_fd, (struct sockaddr *)&client_address,
                        &client_address_size);
@@ -155,6 +177,8 @@ void *handle_players(void *arg) {
   int player_num = thread_data->player_num;
   int player_id = thread_data->player_id;
   game_state_t *game_state = thread_data->game_state;
+
+  addRunningThread();
 
   play_pacman(client_fd, player_num, player_id, game_state);
 
