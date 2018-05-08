@@ -4,12 +4,14 @@
  */
 #include "client.h"
 
+thread_data_t * thread_data;
 /*  *  *  *  *  *  *  */
 /*  Main entry point  */
 /*  *  *  *  *  *  *  */
 
 int main(int argc, char *argv[]) {
   int connection_fd;
+
   // show program usage
   if (argc != 3) {
     print_usage_error(argv[0], "<address> <port>");
@@ -17,7 +19,8 @@ int main(int argc, char *argv[]) {
   // start the server
   connection_fd = open_socket(argv[1], argv[2]);
   // play the game
-  test(connection_fd);
+  play(connection_fd);
+
   // close the socket
   close(connection_fd);
 
@@ -80,7 +83,7 @@ void send_request(char *buffer, int connection_fd) {
 /*
   This function handles the received response by the server
   and prints it.
-  
+
       ** USED FOR DEBUG PURPOSES **
 */
 void print_response(char *response, char *buffer, int connection_fd) {
@@ -97,32 +100,82 @@ void print_response(char *response, char *buffer, int connection_fd) {
   printf("received %s\n", buffer);
 }
 
+
 /*
   This function is a game testing function
       ** USED FOR DEBUG PURPOSES **
 */
-int test(int connection_fd) {
+int play(int connection_fd) {
   char *buffer = (char *)malloc(BUFFER_SIZE);
   char *response = (char *)malloc(BUFFER_SIZE);
-  int type;
   char data[50];
+  int code;
 
-  // get the initial two cards of the player, and show the first card of the
-  // dealer
-  printf("TESTING...\n");
+  // Get the name of the player
+  printf("\nWhat is your name? ");
+  scanf("%[^\t\n]", data);
+  sprintf(buffer, "%d %s", INIT, data);
 
-  // ask the player for his decisions
-  while (1) {
-    bzero(buffer, BUFFER_SIZE);
-    printf("\nEnter the buffer to send: ");
-    scanf("%d %[^\t\n]", &type, data);
-    sprintf(buffer, "%d %s", type, data);
+  // send the request
+  send_request(buffer, connection_fd);
+  parse_data(buffer, &code, data);
 
-    // send the request
-    send_request(buffer, connection_fd);
+  if(code == WAIT){
+    printf("Seguimos esperando conexiones, el juego iniciara pronto");
+  }
 
-    // print the response
-    print_response(response, buffer, connection_fd);
+  // print the response
+  print_response(response, buffer, connection_fd);
+
+  initscr();  // ncurses init
+  noecho();   // Dont show keys pressed in console
+   
+  while (1)
+  {
+    timeout(100); // Requests every 100 miliseconds
+    if (getch() == '\033') {
+      getch(); // skip the [
+      switch(getch()) { // the real value
+          case 'A':
+              // up
+              printf("UP");
+              //sprintf(buffer, "%d 0", MOVE); // move in y +1
+              break;
+          case 'B':
+              // down
+              printf("DOWN");
+              //sprintf(buffer, "%d 0", MOVE); //move in y -1
+              break;
+          case 'C':
+              // right
+              //sprintf(buffer, "%d 0", MOVE);  //movoe in x +1
+              break;
+          case 'D':
+              // left
+              //sprintf(buffer, "%d 0", MOVE);  // move in x -1
+              break;
+            }
+    }
+    else {
+      // No Keys pressed within the time
+        sprintf(buffer, "%d 0", ACK);
+    }
+      // send the request
+      send_request(buffer, connection_fd);
+      // print the response
+      print_response(response, buffer, connection_fd);
+      parse_data(buffer, &code, data);
+      bzero(buffer, BUFFER_SIZE);
+
+      if(code == WAIT){
+        // save positions to struct
+        break;
+      }
+      if(code == ERROR){
+        printf("\nServer was disconected");
+        endwin();
+        break;
+      }
   }
 
   // free the memory
@@ -130,4 +183,18 @@ int test(int connection_fd) {
   free(response);
 
   return 0;
+}
+
+void parse_data(char * buffer, int *type, char * data)
+{
+  // parse the data
+  sscanf(buffer, "%d %[^\t\n]", type, data);
+}
+
+void * handle_logic(void * arg)
+{
+  int connection_fd = thread_data->client_fd;
+
+  play(connection_fd);
+  return (void *)0;
 }
