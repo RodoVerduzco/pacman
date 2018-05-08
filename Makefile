@@ -1,6 +1,6 @@
 
 OBJECTS = error.o server_com.o server_helper.o game.o ClientUI.o Map.o
-DEPENDS = error.h server_com.h server_helper.h game.h ClientUI.h Map.h
+DEPENDS = error.h server_com.h server_helper.h game.h ClientUI.h Map.h types.h
 TEST_CLIENT = test_client
 CLIENT = client
 SERVER = server
