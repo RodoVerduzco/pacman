@@ -30,6 +30,6 @@ $(SERVER): $(SERVER).o $(OBJECTS)
 
 # clean
 clean:
-	rm -rf *.o $(TEST_CLIENT) $(CLIENT) $(SERVER)
+	rm -rf *.o $(CLIENT_TEST) $(CLIENT) $(SERVER)
 
 .PHONY: clean all
