@@ -11,7 +11,7 @@
 #include "types.h"
 
 typedef enum { INIT, MOVE, ACK } request_t;
-typedef enum { WAIT, CHANGE, GAMEOVER } response_t;
+typedef enum { WAIT, CHANGE, GAMEOVER, ERROR } response_t;
 
 int get_response(int server_fd, int *type, char *data);
 int send_request(int server_fd, int type, char *data);
