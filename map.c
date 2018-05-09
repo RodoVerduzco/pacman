@@ -30,38 +30,35 @@ void init_gui() {
   init_pair(5, COLOR_WHITE, COLOR_BLACK);
 }
 
-char *getMap() {
+char *get_map() {
 
-  char *mapString = (char *)malloc(sizeof(char) * MAP_ROWS * MAP_COLS);
+  // open the file
 
-  // Map to be used by the game
-  mapString = "#####################################################\
-  ##x.....................x###x.....................x##\
-  ##x.x#####x.x#########x.x###x.x#########x.x#####x.x##\
-  ##x.x#####x.x#########x.x###x.x#########x.x#####x.x##\
-  ##x...............................................x##\
-  ##x.x#####x.x###x.x###############x.x###x.x#####x.x##\
-  ##x.x#####x.x###x.......x###x.......x###x.x#####x.x##\
-  ##x.........x#########x.x###x.x#########x.........x##\
-  ####x.x###x.x#########x.x###x.x#########x.x####x.x###\
-  ####x.x###x.x###x...................x###x.x####x.x###\
-  ####x.x###x.x###x.x######___######x.x###x.x####x.x###\
-  ####x.x###x.x###x.x###         ###x.x###x.x####x.x###\
-  ##x...............x###         ###x...............x##\
-  ##x.x#####x.x###x.x###############x.x###x.x#####x.x##\
-  ##x.....x#x...............................x#x.....x##\
-  ######x.x#x.x###x.x###############x.x###x.x###x.x####\
-  ##x.........x###x.......x###x.......x###x.........x##\
-  ##x.x#################x.x###x.x#################x.x##\
-  ##x.x#################x.x###x.x#################x.x##\
-  ##x...............................................x##\
-  #####################################################";
+  FILE *file = fopen(MAP_FILE, "r");
 
-  return mapString;
+  // get the file size
+
+  fseek(file, 0, SEEK_END);
+  int file_size = ftell(file);
+  fseek(file, 0, SEEK_SET);
+
+  // assign memory to the text
+
+  char *map = (char *)malloc(file_size * sizeof(char) + 1);
+
+  // read the text
+
+  fread(map, sizeof(char), file_size, file);
+
+  // close the file
+
+  fclose(file);
+
+  return map;
 }
 
 void draw_map() {
-  char *map = getMap();
+  char *map = get_map();
   int i, j;
   int tempy = 1;
   int tempx = 1;
