@@ -7,6 +7,7 @@
 #define SERVER_HELPER_H
 
 #include <signal.h>
+#include <unistd.h>
 
 // Custom Libraries
 #include "game.h"
@@ -25,4 +26,4 @@ void freeThread(game_state_t *game_state);
 int getRunningThreads();
 int getInterrupted();
 
-#endif  /* SERVER_HELPER_H */
+#endif /* SERVER_HELPER_H */

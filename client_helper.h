@@ -11,5 +11,6 @@ void *handle_interactions(void *arg);
 void *handle_gui(void *arg);
 void get_keys_pressed(const int player_id, game_state_t *game_state, char *data,
                       int *type);
+void print_leaderboard(game_state_t *game_state, int player_num);
 
 #endif

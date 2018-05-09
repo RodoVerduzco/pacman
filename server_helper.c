@@ -175,7 +175,11 @@ void handle_game_requests(int client_fd, int player_num, int player_id,
     if (await_request(client_fd)) {
       if (get_request(client_fd, &type, data) == -1) {
         // handle game error
-        printf("error communicating with player %d", player_id);
+        printf("error communicating with player %d, terminating corresponding "
+               "thread",
+               player_id);
+        break;
+
       } else {
         printf(" got %d\n", type);
 
@@ -195,7 +199,9 @@ void handle_game_requests(int client_fd, int player_num, int player_id,
                      game_state->pacman_id == pacman_id) {
             game_state->player_data[player_id].x = x;
             game_state->player_data[player_id].y = y;
-            game_state->player_data[player_id].score++;
+            if (player_id == pacman_id) {
+              game_state->player_data[player_id].score++;
+            }
           }
           pthread_mutex_unlock(&game_state->player_data_lock);
           pthread_mutex_unlock(&game_state->pacman_id_lock);
@@ -212,6 +218,13 @@ void handle_game_requests(int client_fd, int player_num, int player_id,
             // handle game error
             printf("Error: send WAIT\n");
           }
+
+          if (get_request(client_fd, &type, data)) {
+            // handle game error
+            printf("Error: send WAIT\n");
+          }
+
+          sleep(10);
 
           fflush(stdout);
 

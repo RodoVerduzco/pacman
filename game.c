@@ -92,8 +92,8 @@ int check_other_players(game_state_t *game_state, int player_num, int player_id,
 void reset_coordinates(game_state_t *game_state, int player_num) {
   pthread_mutex_lock(&game_state->player_data_lock);
   for (int i = 0; i < player_num; i++) {
-    game_state->player_data[i].x = 0;
-    game_state->player_data[i].y = 0;
+    game_state->player_data[i].x = init_x(i);
+    game_state->player_data[i].y = init_y(i);
   }
   pthread_mutex_unlock(&game_state->player_data_lock);
 }

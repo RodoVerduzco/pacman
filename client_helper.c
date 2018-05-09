@@ -20,7 +20,8 @@ void play(int server_fd) {
   get_response(server_fd, &type, data);
 
   sscanf(data, "%d %d", &player_num, &player_id);
-  printf("%d %d", player_num, player_id);
+
+  printf("\nWaiting for %d other players...\n", player_num - 1);
 
   game_state_t *game_state = init_game_state(player_num);
 
@@ -30,10 +31,25 @@ void play(int server_fd) {
   thread_data->player_id = player_id;
   thread_data->player_num = player_num;
 
-  pthread_create(&ltid, NULL, handle_interactions, thread_data);
-  pthread_create(&gtid, NULL, handle_gui, thread_data);
+  send_request(server_fd, type, data);
+  get_response(server_fd, &type, data);
+  parse_game_state(game_state, player_num, data);
 
-  pthread_join(ltid, NULL);
+  while (1) {
+    pthread_create(&ltid, NULL, handle_interactions, thread_data);
+    pthread_create(&gtid, NULL, handle_gui, thread_data);
+
+    pthread_join(ltid, NULL);
+
+    send_request(server_fd, type, data);
+    print_leaderboard(game_state, player_num);
+    get_response(server_fd, &type, data);
+    parse_game_state(game_state, player_num, data);
+
+    if (type == GAMEOVER) {
+      break;
+    }
+  }
 }
 
 void *handle_interactions(void *arg) {
@@ -51,7 +67,6 @@ void *handle_interactions(void *arg) {
     get_keys_pressed(player_id, game_state, data, &type);
     send_request(server_fd, type, data);
     get_response(server_fd, &type, data);
-    parse_game_state(game_state, player_num, data);
 
     if (type == WAIT) {
       pthread_mutex_lock(&game_state->pacman_id_lock);
@@ -59,6 +74,8 @@ void *handle_interactions(void *arg) {
       pthread_mutex_unlock(&game_state->pacman_id_lock);
       break;
     }
+
+    parse_game_state(game_state, player_num, data);
   }
 
   pthread_exit(NULL);
@@ -146,4 +163,24 @@ void get_keys_pressed(const int player_id, game_state_t *game_state, char *data,
   default:
     *type = ACK;
   }
+}
+
+void print_leaderboard(game_state_t *game_state, int player_num) {
+  int max_score;
+  char *winner = (char *)malloc(BUFFER_SIZE);
+
+  fflush(stdout);
+
+  for (int i = 0; i < player_num; i++) {
+    if (max_score < game_state->player_data[i].score) {
+      max_score = game_state->player_data[i].score;
+      winner = game_state->player_data[i].name;
+    }
+    printf("Player %s: %d points\n", game_state->player_data[i].name,
+           game_state->player_data[i].score);
+  }
+
+  printf("!!! %s is on top !!!\n", winner);
+
+  fflush(stdout);
 }
