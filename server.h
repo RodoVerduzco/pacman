@@ -26,4 +26,4 @@ void print_ips();
 int init_server(char *port);
 void create_games(int server_fd, int player_num);
 void *handle_players(void *arg);
-void setupHandlers();
+void setup_handlers();

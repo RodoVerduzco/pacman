@@ -6,7 +6,7 @@
 #include "map.h"
 #include <curses.h>
 
-void play(int server_fd);
+void play(int server_fd, int is_test_client);
 void *handle_interactions(void *arg);
 void *handle_gui(void *arg);
 void get_keys_pressed(const int player_id, game_state_t *game_state, char *data,

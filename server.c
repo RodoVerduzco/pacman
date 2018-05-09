@@ -8,6 +8,8 @@
 int main(int argc, char *argv[]) {
   int server_fd;
 
+  setup_handlers();
+
   // check the correct arguments
   if (argc != 3) {
     print_usage_error(argv[0], "<port> <player_num>");
@@ -32,11 +34,11 @@ int main(int argc, char *argv[]) {
 }
 
 // Modify the signal handlers for specific events
-void setupHandlers() {
+void setup_handlers() {
   struct sigaction new_action;
 
   // Change the action for the Ctrl-C input (SIGINT)
-  new_action.sa_handler = onInterrupt;
+  new_action.sa_handler = on_interrupt;
   // Set the mask to the empty set
   if (sigemptyset(&new_action.sa_mask) == -1) {
     perror("ERROR: sigemptyset");
@@ -174,13 +176,14 @@ void *handle_players(void *arg) {
   int player_id = thread_data->player_id;
   game_state_t *game_state = thread_data->game_state;
 
-  addRunningThread();
-
   serve(client_fd, player_num, player_id, game_state);
 
   // close the connection and free the memory
   close(client_fd);
   free(thread_data);
+  if (player_id == 0) {
+    free(game_state);
+  }
 
   printf("thread ending");
 

@@ -20,10 +20,6 @@ void handle_init_request(int client_fd, int player_num, int player_id,
                          game_state_t *game_state, char *data);
 void handle_game_requests(int client_fd, int player_num, int player_id,
                           game_state_t *game_state, char *data);
-void onInterrupt();
-void addRunningThread();
-void freeThread(game_state_t *game_state);
-int getRunningThreads();
-int getInterrupted();
+void on_interrupt();
 
 #endif /* SERVER_HELPER_H */

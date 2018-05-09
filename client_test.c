@@ -2,7 +2,7 @@
  *    The main client program for a multiplayer Pacman game.
  *    Written by Ludovic Cyril Michel, Rodolfo Verduzco and Cynthia Castillo.
  */
-#include "client.h"
+#include "client_test.h"
 
 int main(int argc, char *argv[]) {
   int server_fd;
@@ -14,7 +14,7 @@ int main(int argc, char *argv[]) {
   // start the server
   server_fd = open_socket(argv[1], argv[2]);
   // play the game
-  play(server_fd, 0);
+  play(server_fd, 1);
 
   // close the socket
   close(server_fd);

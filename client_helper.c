@@ -1,10 +1,15 @@
 #include "client_helper.h"
 
-void play(int server_fd) {
+int server_error = 0;
+int test_client = 0;
+
+void play(int server_fd, int is_test_client) {
   char *data = (char *)malloc(sizeof(char) * BUFFER_SIZE);
   int type;
   int player_num;
   int player_id;
+
+  test_client = is_test_client;
 
   // logical thread
   pthread_t ltid;
@@ -47,9 +52,18 @@ void play(int server_fd) {
     parse_game_state(game_state, player_num, data);
 
     if (type == GAMEOVER) {
+      printf("GAME OVER");
+      break;
+    }
+
+    if (type == ERROR || server_error) {
+      printf("Server is down, please try again later.");
       break;
     }
   }
+
+  free(thread_data);
+  free(data);
 }
 
 void *handle_interactions(void *arg) {
@@ -58,6 +72,8 @@ void *handle_interactions(void *arg) {
   int player_num = thread_data->player_num;
   int player_id = thread_data->player_id;
   game_state_t *game_state = thread_data->game_state;
+
+  srand(time(NULL));
 
   char *data = (char *)malloc(sizeof(char) * BUFFER_SIZE);
   int type;
@@ -75,9 +91,15 @@ void *handle_interactions(void *arg) {
       break;
     }
 
+    if (type == ERROR) {
+      server_error = 1;
+      break;
+    }
+
     parse_game_state(game_state, player_num, data);
   }
 
+  free(data);
   pthread_exit(NULL);
 }
 
@@ -109,10 +131,15 @@ void *handle_gui(void *arg) {
     if (current_pacman_id != pacman_id) {
       break;
     }
+
+    if (server_error) {
+      break;
+    }
   }
 
   endwin();
 
+  free(prev_positions);
   pthread_exit(NULL);
 }
 
@@ -125,9 +152,17 @@ void get_keys_pressed(const int player_id, game_state_t *game_state, char *data,
                       int *type) {
   int pos_x;
   int pos_y;
+  int option;
 
   timeout(100);
-  switch (getch()) {
+
+  if (test_client) {
+    option = rand() % 4 + 65;
+  } else {
+    option = getch();
+  }
+
+  switch (option) {
   case 65: // up
     pthread_mutex_lock(&game_state->player_data_lock);
     pos_x = game_state->player_data[player_id].x - 1;
@@ -156,8 +191,8 @@ void get_keys_pressed(const int player_id, game_state_t *game_state, char *data,
     pthread_mutex_lock(&game_state->player_data_lock);
     pos_x = game_state->player_data[player_id].x;
     pos_y = game_state->player_data[player_id].y - 1;
-    sprintf(data, "%d %d", pos_x, pos_y);
     pthread_mutex_unlock(&game_state->player_data_lock);
+    sprintf(data, "%d %d", pos_x, pos_y);
     *type = MOVE;
     break;
   default:
@@ -183,4 +218,6 @@ void print_leaderboard(game_state_t *game_state, int player_num) {
   printf("!!! %s is on top !!!\n", winner);
 
   fflush(stdout);
+
+  free(winner);
 }
