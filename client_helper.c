@@ -71,6 +71,9 @@ void *handle_gui(void *arg) {
   int pacman_id;
   int current_pacman_id;
 
+  prev_positions_t *prev_positions =
+      (prev_positions_t *)malloc(sizeof(prev_positions_t));
+
   pthread_mutex_lock(&game_state->pacman_id_lock);
   pacman_id = game_state->pacman_id;
   pthread_mutex_unlock(&game_state->pacman_id_lock);
@@ -79,7 +82,7 @@ void *handle_gui(void *arg) {
   draw_map();
 
   while (1) {
-    draw_players(game_state, player_num);
+    draw_players(game_state, player_num, prev_positions);
 
     pthread_mutex_lock(&game_state->pacman_id_lock);
     current_pacman_id = game_state->pacman_id;
@@ -109,32 +112,32 @@ void get_keys_pressed(const int player_id, game_state_t *game_state, char *data,
   switch (getch()) {
   case 65: // up
     pthread_mutex_lock(&game_state->player_data_lock);
-    pos_x = game_state->player_data[player_id].x;
-    pos_y = game_state->player_data[player_id].y + 1;
+    pos_x = game_state->player_data[player_id].x - 1;
+    pos_y = game_state->player_data[player_id].y;
     pthread_mutex_unlock(&game_state->player_data_lock);
     sprintf(data, "%d %d", pos_x, pos_y);
     *type = MOVE;
     break;
   case 66: // down
     pthread_mutex_lock(&game_state->player_data_lock);
-    pos_x = game_state->player_data[player_id].x;
-    pos_y = game_state->player_data[player_id].y - 1;
-    pthread_mutex_unlock(&game_state->player_data_lock);
-    sprintf(data, "%d %d", pos_x, pos_y);
-    *type = MOVE;
-    break;
-  case 67: // right
-    pthread_mutex_unlock(&game_state->player_data_lock);
     pos_x = game_state->player_data[player_id].x + 1;
     pos_y = game_state->player_data[player_id].y;
     pthread_mutex_unlock(&game_state->player_data_lock);
     sprintf(data, "%d %d", pos_x, pos_y);
     *type = MOVE;
     break;
+  case 67: // right
+    pthread_mutex_unlock(&game_state->player_data_lock);
+    pos_x = game_state->player_data[player_id].x;
+    pos_y = game_state->player_data[player_id].y + 1;
+    pthread_mutex_unlock(&game_state->player_data_lock);
+    sprintf(data, "%d %d", pos_x, pos_y);
+    *type = MOVE;
+    break;
   case 68: // left
     pthread_mutex_lock(&game_state->player_data_lock);
-    pos_x = game_state->player_data[player_id].x - 1;
-    pos_y = game_state->player_data[player_id].y;
+    pos_x = game_state->player_data[player_id].x;
+    pos_y = game_state->player_data[player_id].y - 1;
     sprintf(data, "%d %d", pos_x, pos_y);
     pthread_mutex_unlock(&game_state->player_data_lock);
     *type = MOVE;

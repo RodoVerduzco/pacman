@@ -34,4 +34,10 @@ typedef struct {
   game_state_t *game_state;
 } thread_data_t;
 
+// Struct to help determine players' previous positions
+typedef struct {
+  int x[4];
+  int y[4];
+} prev_positions_t;
+
 #endif

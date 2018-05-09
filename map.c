@@ -10,6 +10,9 @@ char *get_map() {
   // open the file
 
   FILE *file = fopen(MAP_FILE, "r");
+  if (file == NULL) {
+    printf("seg");
+  }
 
   // get the file size
 
@@ -30,6 +33,12 @@ char *get_map() {
   fclose(file);
 
   return map;
+}
+
+char get_map_position(int x, int y) {
+  char *map = get_map();
+  int i = x * (MAP_COLS - 2) + y;
+  return map[i];
 }
 
 int init_x(int player_id) {
@@ -88,12 +97,13 @@ void init_gui() {
 void draw_map() {
   char *map = get_map();
   int i, j;
-  int tempy = 0;
   int tempx = 0;
+  int tempy = 0;
   j = MAP_COLS;
 
   for (i = 0; i < (MAP_ROWS * MAP_COLS) - 1; i++) {
     move(tempy, tempx);
+
     switch (map[i]) {
     case WALL:
       attron(COLOR_PAIR(4));
@@ -112,6 +122,7 @@ void draw_map() {
       tempx = 0;
       tempy += 1;
       j += MAP_COLS;
+      i++;
     } else {
       tempx += 1;
     }
@@ -120,7 +131,26 @@ void draw_map() {
   refresh();
 }
 
-void draw_players(game_state_t *game_state, int player_num) {
+void patch_map(int x, int y) {
+  char patch = get_map_position(x, y);
+  move(x, y);
+  switch (patch) {
+  case WALL:
+    attron(COLOR_PAIR(4));
+    addch(patch);
+    attroff(COLOR_PAIR(4));
+    break;
+
+  default:
+    attron(COLOR_PAIR(5));
+    addch(patch);
+    attroff(COLOR_PAIR(5));
+    break;
+  }
+}
+
+void draw_players(game_state_t *game_state, int player_num,
+                  prev_positions_t *prev_positions) {
   int x;
   int y;
   int pacman_id;
@@ -130,10 +160,15 @@ void draw_players(game_state_t *game_state, int player_num) {
   pthread_mutex_unlock(&game_state->pacman_id_lock);
 
   for (int player_id = 0; player_id < player_num; player_id++) {
+    patch_map(prev_positions->x[player_id], prev_positions->y[player_id]);
+
     pthread_mutex_lock(&game_state->player_data_lock);
     x = game_state->player_data[player_id].x;
     y = game_state->player_data[player_id].y;
     pthread_mutex_unlock(&game_state->player_data_lock);
+
+    prev_positions->x[player_id] = x;
+    prev_positions->y[player_id] = y;
 
     move(x, y);
     attron(A_BOLD);
