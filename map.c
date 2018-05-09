@@ -35,8 +35,7 @@ char *get_map() {
   return map;
 }
 
-char get_map_position(int x, int y) {
-  char *map = get_map();
+char get_map_position(int x, int y, char *map) {
   int i = x * (MAP_COLS - 2) + y;
   return map[i];
 }
@@ -96,43 +95,33 @@ void init_gui() {
 
 void draw_map() {
   char *map = get_map();
-  int i, j;
-  int tempx = 0;
-  int tempy = 0;
-  j = MAP_COLS;
+  int x = 0;
+  int y = 0;
 
-  for (i = 0; i < (MAP_ROWS * MAP_COLS) - 1; i++) {
-    move(tempy, tempx);
+  for (int i = 0; i < MAP_ROWS - 1; i++) {
+    for (int j = 0; j < MAP_COLS - 2; j++) {
+      move(i, j);
+      switch (get_map_position(i, j, map)) {
+      case WALL:
+        attron(COLOR_PAIR(4));
+        addch(get_map_position(i, j, map));
+        attroff(COLOR_PAIR(4));
+        break;
 
-    switch (map[i]) {
-    case WALL:
-      attron(COLOR_PAIR(4));
-      addch(map[i]);
-      attroff(COLOR_PAIR(4));
-      break;
-
-    default:
-      attron(COLOR_PAIR(5));
-      addch(map[i]);
-      attroff(COLOR_PAIR(5));
-      break;
-    }
-
-    if (i == j - 2) {
-      tempx = 0;
-      tempy += 1;
-      j += MAP_COLS;
-      i++;
-    } else {
-      tempx += 1;
+      default:
+        attron(COLOR_PAIR(5));
+        addch(get_map_position(i, j, map));
+        attroff(COLOR_PAIR(5));
+        break;
+      }
     }
   }
 
   refresh();
 }
 
-void patch_map(int x, int y) {
-  char patch = get_map_position(x, y);
+void patch_map(int x, int y, char *map) {
+  char patch = get_map_position(x, y, map);
   move(x, y);
   switch (patch) {
   case WALL:
@@ -155,12 +144,14 @@ void draw_players(game_state_t *game_state, int player_num,
   int y;
   int pacman_id;
 
+  char *map = get_map();
+
   pthread_mutex_lock(&game_state->pacman_id_lock);
   pacman_id = game_state->pacman_id;
   pthread_mutex_unlock(&game_state->pacman_id_lock);
 
   for (int player_id = 0; player_id < player_num; player_id++) {
-    patch_map(prev_positions->x[player_id], prev_positions->y[player_id]);
+    patch_map(prev_positions->x[player_id], prev_positions->y[player_id], map);
 
     pthread_mutex_lock(&game_state->player_data_lock);
     x = game_state->player_data[player_id].x;
