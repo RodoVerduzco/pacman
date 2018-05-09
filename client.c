@@ -6,8 +6,6 @@
 
 #define BUFFER_SIZE 1024
 
-int open_socket(char *address, char *port);
-
 int main(int argc, char *argv[]) {
   int server_fd;
 
