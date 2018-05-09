@@ -13,14 +13,14 @@
 #include <sys/poll.h>
 
 #include "error.h"
-#include "server_types.h"
+#include "types.h"
 
-/*
-  Enums to handle the communication protocol
-  Communication protocol explained in the documentation
-*/
-typedef enum { INIT, MOVE, OK } request_t;
-typedef enum { WAIT, CHANGE, GAMEOVER, ERROR } response_t;
+typedef enum { INIT, MOVE, ACK } request_t;
+typedef enum { WAIT, CHANGE, GAMEOVER } response_t;
+
+
+
+
 
 int get_request(int client_fd, int *type, char *data);
 int send_response(int client_fd, int type, char *data);

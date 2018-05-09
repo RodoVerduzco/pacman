@@ -9,8 +9,7 @@ pthread_mutex_t running_mutex = PTHREAD_MUTEX_INITIALIZER;
 int running_threads = 0;
 int interrupted = 0;
 
-void onInterrupt(int signal)
-{
+void onInterrupt(int signal) {
   interrupted = 1;
   printf("\nTHE GAME WAS INTERRUPTED\n");
 }
@@ -18,8 +17,8 @@ void onInterrupt(int signal)
 /*
   This function handles the pacman game
 */
-void play_pacman(int client_fd, int player_num, int player_id,
-                 game_state_t *game_state) {
+void serve(int client_fd, int player_num, int player_id,
+           game_state_t *game_state) {
   char *data = (char *)malloc(sizeof(char) * BUFFER_SIZE);
   int pacman_id;
 
@@ -51,15 +50,13 @@ void play_pacman(int client_fd, int player_num, int player_id,
 /*
   Increment the running thread counter
 */
-void addRunningThread()
-{
+void addRunningThread() {
   pthread_mutex_lock(&running_mutex);
   running_threads++;
   pthread_mutex_unlock(&running_mutex);
 }
 
-int getRunningThreads()
-{
+int getRunningThreads() {
   int threads;
   pthread_mutex_lock(&running_mutex);
   threads = running_threads;
@@ -67,20 +64,16 @@ int getRunningThreads()
   return threads;
 }
 
-int getInterrupted()
-{
-  return interrupted;
-}
+int getInterrupted() { return interrupted; }
 
-void freeThread(game_state_t *game_state)
-{
+void freeThread(game_state_t *game_state) {
   pthread_mutex_lock(&running_mutex);
-    running_threads--;
-    if(running_threads<0)
-      running_threads = 0;
+  running_threads--;
+  if (running_threads < 0)
+    running_threads = 0;
   pthread_mutex_unlock(&running_mutex);
   printf("NUM THREADS %d %d\n", running_threads, getInterrupted());
-  if(running_threads ==0 && getInterrupted()==1)
+  if (running_threads == 0 && getInterrupted() == 1)
     exit(EXIT_SUCCESS);
 }
 
@@ -108,7 +101,7 @@ void handle_init_request(int client_fd, int player_num, int player_id,
   strcpy(game_state->player_data[player_id].name, data);
 
   bzero(data, BUFFER_SIZE);
-  sprintf(data, "%d", player_id);
+  sprintf(data, "%d %d", player_num, player_id);
 
   if (send_response(client_fd, WAIT, data)) {
     // handle game error
@@ -123,7 +116,7 @@ void handle_init_request(int client_fd, int player_num, int player_id,
     printf("Error: receive OK\n");
   }
 
-  if (type != OK) {
+  if (type != ACK) {
     // handle game error
   }
 
@@ -188,7 +181,6 @@ void handle_game_requests(int client_fd, int player_num, int player_id,
 
         fflush(stdout);
 
-
         // The player moved, need tho update the state
         if (type == MOVE) {
           parse_change_request(data, &x, &y);
@@ -240,7 +232,7 @@ void handle_game_requests(int client_fd, int player_num, int player_id,
     }
 
     // Server INTERRUPTED
-    if(interrupted == 1){
+    if (interrupted == 1) {
       send_response(client_fd, ERROR, NULL);
       pthread_exit(NULL);
     }

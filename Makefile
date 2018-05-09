@@ -1,7 +1,7 @@
 
-OBJECTS = error.o server_com.o server_helper.o game.o ClientUI.o Map.o
-DEPENDS = error.h server_com.h server_helper.h game.h ClientUI.h Map.h types.h
-TEST_CLIENT = test_client
+OBJECTS = error.o server_com.o server_helper.o game.o ClientUI.o Map.o client_com.o client_helper.o
+DEPENDS = error.h server_com.h server_helper.h game.h ClientUI.h Map.h client_com.h client_helper.h
+
 CLIENT = client
 SERVER = server
 CC = gcc
@@ -11,9 +11,9 @@ LDLIBS = -lm -lncurses -lpthread
 # default
 all: $(TEST_CLIENT) $(CLIENT) $(SERVER)
 
-# test client
-$(TEST_CLIENT): $(TEST_CLIENT).o $(OBJECTS)
-	$(CC) $^ -o $@ $(LDFLAGS) $(LDLIBS)
+
+
+
 
 # client
 $(CLIENT): $(CLIENT).o $(OBJECTS)

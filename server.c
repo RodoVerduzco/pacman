@@ -33,23 +33,20 @@ int main(int argc, char *argv[]) {
 }
 
 // Modify the signal handlers for specific events
-void setupHandlers()
-{
-    struct sigaction new_action;
+void setupHandlers() {
+  struct sigaction new_action;
 
-    // Change the action for the Ctrl-C input (SIGINT)
-    new_action.sa_handler = onInterrupt;
-    // Set the mask to the empty set
-    if ( sigemptyset(&new_action.sa_mask) == -1 )
-    {
-        perror("ERROR: sigemptyset");
-        exit(EXIT_FAILURE);
-    }
-    if ( sigaction(SIGINT, &new_action, NULL) == -1 )
-    {
-        perror("ERROR: sigaction");
-        exit(EXIT_FAILURE);
-    }
+  // Change the action for the Ctrl-C input (SIGINT)
+  new_action.sa_handler = onInterrupt;
+  // Set the mask to the empty set
+  if (sigemptyset(&new_action.sa_mask) == -1) {
+    perror("ERROR: sigemptyset");
+    exit(EXIT_FAILURE);
+  }
+  if (sigaction(SIGINT, &new_action, NULL) == -1) {
+    perror("ERROR: sigaction");
+    exit(EXIT_FAILURE);
+  }
 }
 
 void print_ips() {
@@ -180,7 +177,7 @@ void *handle_players(void *arg) {
 
   addRunningThread();
 
-  play_pacman(client_fd, player_num, player_id, game_state);
+  serve(client_fd, player_num, player_id, game_state);
 
   // close the connection and free the memory
   close(client_fd);

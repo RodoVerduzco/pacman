@@ -5,8 +5,8 @@
 #ifndef GAME_H
 #define GAME_H
 
-// Support libraries
-#include "server_types.h"
+#include "types.h"
+
 #include <stdlib.h>
 
 // Function Declaration

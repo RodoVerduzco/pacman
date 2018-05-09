@@ -48,11 +48,11 @@ int send_response(int client_fd, int type, char *data) {
     return -1;
   }
 
+  printf("\nsent %s\n", buffer);
+
   if (data != NULL) {
     bzero(data, BUFFER_SIZE);
   }
-
-  printf("\nsent");
 
   return 0;
 }
@@ -92,7 +92,7 @@ void stringify_game_state(game_state_t *game_state, int player_num,
   // Stringify the state being consistent with the data.
   pthread_mutex_lock(&game_state->player_data_lock);
   for (int player_id = 0; player_id < player_num; player_id++) {
-    sprintf(temp, "%d %s %d %d %d ", player_id,
+    sprintf(temp, "%d %s %d %d %d/", player_id,
             (game_state->player_data + player_id)->name,
             (game_state->player_data + player_id)->score,
             (game_state->player_data + player_id)->x,
