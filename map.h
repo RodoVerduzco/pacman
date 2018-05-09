@@ -19,7 +19,7 @@
 #include "types.h"
 
 /* **** Macros***  */
-#define MAP_COLS 53
+#define MAP_COLS 54
 #define MAP_ROWS 21
 #define MAP_FILE "map.txt"
 
