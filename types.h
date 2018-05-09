@@ -28,7 +28,7 @@ typedef struct {
 
 // Struct to be received by thread
 typedef struct {
-  int client_fd;
+  int connection_fd;
   int player_num;
   int player_id;
   game_state_t *game_state;

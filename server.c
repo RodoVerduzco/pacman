@@ -152,7 +152,7 @@ void create_games(int server_fd, int player_num) {
            client_presentation, client_address.sin_port);
 
     thread_data_t *thread_data = (thread_data_t *)malloc(sizeof(thread_data_t));
-    thread_data->client_fd = client_fd;
+    thread_data->connection_fd = client_fd;
     thread_data->player_num = player_num;
     thread_data->player_id = player_id;
     thread_data->game_state = game_state;
@@ -170,7 +170,7 @@ void create_games(int server_fd, int player_num) {
 
 void *handle_players(void *arg) {
   thread_data_t *thread_data = (thread_data_t *)arg;
-  int client_fd = thread_data->client_fd;
+  int client_fd = thread_data->connection_fd;
   int player_num = thread_data->player_num;
   int player_id = thread_data->player_id;
   game_state_t *game_state = thread_data->game_state;
