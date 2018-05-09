@@ -122,7 +122,7 @@ void draw_players(game_state_t *game_state, int player_num) {
 
     attroff(COLOR_PAIR(player_id));
     attroff(A_BOLD);
-  }
 
-  refresh();
+    refresh();
+  }
 }
