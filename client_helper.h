@@ -3,6 +3,7 @@
 
 #include "client_com.h"
 #include "game.h"
+#include "map.h"
 #include <curses.h>
 
 void play(int server_fd);

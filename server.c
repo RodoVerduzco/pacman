@@ -13,7 +13,6 @@ int main(int argc, char *argv[]) {
     print_usage_error(argv[0], "<port> <player_num>");
   }
 
-  setupHandlers();
   // show the IPs assigned to this computer
   print_ips();
 

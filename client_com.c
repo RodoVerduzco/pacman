@@ -16,7 +16,6 @@ int get_response(int server_fd, int *type, char *data) {
 
   // parse the data
   sscanf(buffer, "%d %[^\t\n]", type, data);
-  printf("\nreceived %s", data);
 
   return 0;
 }
@@ -39,8 +38,6 @@ int send_request(int server_fd, int type, char *data) {
   if (data != NULL) {
     bzero(data, BUFFER_SIZE);
   }
-
-  printf("\nsent");
 
   return 0;
 }

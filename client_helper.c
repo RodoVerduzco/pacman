@@ -52,9 +52,9 @@ void *handle_interactions(void *arg) {
     get_response(server_fd, &type, data);
     parse_game_state(game_state, player_num, data);
 
-    if(type == WAIT){
+    if (type == WAIT) {
       pthread_mutex_lock(&game_state->pacman_id_lock);
-      game_state->pacman_id ++;
+      game_state->pacman_id++;
       pthread_mutex_unlock(&game_state->pacman_id_lock);
       break;
     }
@@ -65,9 +65,7 @@ void *handle_interactions(void *arg) {
 
 void *handle_gui(void *arg) {
   thread_data_t *thread_data = (thread_data_t *)arg;
-  int server_fd = thread_data->connection_fd;
   int player_num = thread_data->player_num;
-  int player_id = thread_data->player_id;
   game_state_t *game_state = thread_data->game_state;
 
   int pacman_id;
@@ -77,17 +75,22 @@ void *handle_gui(void *arg) {
   pacman_id = game_state->pacman_id;
   pthread_mutex_unlock(&game_state->pacman_id_lock);
 
-  initscr(); // ncurses init
-  noecho();  // Dont show keys pressed in console
-  printf("working");
-  fflush(stdout);
+  init_gui();
+  draw_map();
 
-  // TODO: implementar loop infinito que actualiza el GUI tomando datos de
-  // game_state
-  // Usar mutex cada vez que se lee de game_state (game_state->player_data_lock)
-  // En cada iteracion leer el pacman_id del game_state con el mutex:
-  // game_state->pacman_id_lock y guardarlo en current_pacman_id
-  // Quebrar el loop cuando current_pacman_id != pacman_id
+  while (1) {
+    draw_players(game_state, player_num);
+
+    pthread_mutex_lock(&game_state->pacman_id_lock);
+    current_pacman_id = game_state->pacman_id;
+    pthread_mutex_unlock(&game_state->pacman_id_lock);
+
+    if (current_pacman_id != pacman_id) {
+      break;
+    }
+  }
+
+  endwin();
 
   pthread_exit(NULL);
 }
@@ -103,43 +106,40 @@ void get_keys_pressed(const int player_id, game_state_t *game_state, char *data,
   int pos_y;
 
   timeout(100);
-  if (getch() == '\033') {
-    getch(); // skip the [
-    switch (getch()) {
-    case 'A': // up
-      pthread_mutex_lock(&game_state->player_data_lock);
-      pos_x = game_state->player_data[player_id].x;
-      pos_y = game_state->player_data[player_id].y + 1;
-      pthread_mutex_unlock(&game_state->player_data_lock);
-      sprintf(data, "%d %d", pos_x, pos_y);
-      *type = MOVE;
-      break;
-    case 'B': // down
-      pthread_mutex_lock(&game_state->player_data_lock);
-      pos_x = game_state->player_data[player_id].x;
-      pos_y = game_state->player_data[player_id].y - 1;
-      pthread_mutex_unlock(&game_state->player_data_lock);
-      sprintf(data, "%d %d", pos_x, pos_y);
-      *type = MOVE;
-      break;
-    case 'C': // right
-      pthread_mutex_unlock(&game_state->player_data_lock);
-      pos_x = game_state->player_data[player_id].x + 1;
-      pos_y = game_state->player_data[player_id].y;
-      pthread_mutex_unlock(&game_state->player_data_lock);
-      sprintf(data, "%d %d", pos_x, pos_y);
-      *type = MOVE;
-      break;
-    case 'D': // left
-      pthread_mutex_lock(&game_state->player_data_lock);
-      pos_x = game_state->player_data[player_id].x - 1;
-      pos_y = game_state->player_data[player_id].y;
-      sprintf(data, "%d %d", pos_x, pos_y);
-      pthread_mutex_unlock(&game_state->player_data_lock);
-      *type = MOVE;
-      break;
-    }
-  } else {
+  switch (getch()) {
+  case 65: // up
+    pthread_mutex_lock(&game_state->player_data_lock);
+    pos_x = game_state->player_data[player_id].x;
+    pos_y = game_state->player_data[player_id].y + 1;
+    pthread_mutex_unlock(&game_state->player_data_lock);
+    sprintf(data, "%d %d", pos_x, pos_y);
+    *type = MOVE;
+    break;
+  case 66: // down
+    pthread_mutex_lock(&game_state->player_data_lock);
+    pos_x = game_state->player_data[player_id].x;
+    pos_y = game_state->player_data[player_id].y - 1;
+    pthread_mutex_unlock(&game_state->player_data_lock);
+    sprintf(data, "%d %d", pos_x, pos_y);
+    *type = MOVE;
+    break;
+  case 67: // right
+    pthread_mutex_unlock(&game_state->player_data_lock);
+    pos_x = game_state->player_data[player_id].x + 1;
+    pos_y = game_state->player_data[player_id].y;
+    pthread_mutex_unlock(&game_state->player_data_lock);
+    sprintf(data, "%d %d", pos_x, pos_y);
+    *type = MOVE;
+    break;
+  case 68: // left
+    pthread_mutex_lock(&game_state->player_data_lock);
+    pos_x = game_state->player_data[player_id].x - 1;
+    pos_y = game_state->player_data[player_id].y;
+    sprintf(data, "%d %d", pos_x, pos_y);
+    pthread_mutex_unlock(&game_state->player_data_lock);
+    *type = MOVE;
+    break;
+  default:
     *type = ACK;
   }
 }

@@ -3,15 +3,39 @@
  *    Written by Ludovic Cyril Michel, Rodolfo Verduzco and Cynthia Castillo.
  */
 
-#include "Map.h"
+#include "map.h"
 
-/* Functions implementation */
+/*
+  This function draws the map
+*/
+
+void init_gui() {
+  initscr(); // ncurses init
+  noecho();  // Dont show keys pressed in console
+  curs_set(FALSE);
+
+  if (!has_colors()) {
+    endwin();
+    printf("Your terminal does not support color\n");
+    exit(1);
+  }
+
+  start_color();
+
+  init_pair(0, COLOR_YELLOW, COLOR_BLACK);
+  init_pair(1, COLOR_CYAN, COLOR_BLACK);
+  init_pair(2, COLOR_RED, COLOR_BLACK);
+  init_pair(3, COLOR_GREEN, COLOR_BLACK);
+  init_pair(4, COLOR_BLUE, COLOR_BLACK);
+  init_pair(5, COLOR_WHITE, COLOR_BLACK);
+}
+
 char *getMap() {
 
   char *mapString = (char *)malloc(sizeof(char) * MAP_ROWS * MAP_COLS);
 
   // Map to be used by the game
-    mapString = "#####################################################\
+  mapString = "#####################################################\
   ##x.....................x###x.....................x##\
   ##x.x#####x.x#########x.x###x.x#########x.x#####x.x##\
   ##x.x#####x.x#########x.x###x.x#########x.x#####x.x##\
@@ -36,127 +60,69 @@ char *getMap() {
   return mapString;
 }
 
-/*
-  This function draws the map
-*/
-void drawMap(char *map, int starty, int startx) {
-
+void draw_map() {
+  char *map = getMap();
   int i, j;
-  int tempy = starty;
-  int tempx = startx;
+  int tempy = 1;
+  int tempx = 1;
   j = MAP_COLS;
 
-  if (!has_colors()) {
-    endwin();
-    printf("Your terminal does not support color\n");
-    exit(1);
-  }
-
-  start_color();
-  init_pair(5, COLOR_BLACK,
-            COLOR_BLACK); // color for 'x' & background color for ' '
-  init_pair(6, COLOR_BLUE, COLOR_BLACK);  // color for '#'
-  init_pair(7, COLOR_WHITE, COLOR_BLACK); // color for '.'
-
   for (i = 0; i < (MAP_ROWS * MAP_COLS) - 1; i++) {
-
     move(tempy, tempx);
     switch (map[i]) {
-    case WALL_X:
-      attron(COLOR_PAIR(5));
-      addch(map[i]);
-      attroff(COLOR_PAIR(5));
-      break;
-
     case WALL:
-      attron(COLOR_PAIR(6));
+      attron(COLOR_PAIR(4));
       addch(map[i]);
-      attroff(COLOR_PAIR(6));
-      break;
-
-    case DOOR:
-      attron(COLOR_PAIR(6));
-      addch(map[i]);
-      attroff(COLOR_PAIR(6));
-      break;
-
-    case SPACE:
-      attron(COLOR_PAIR(5));
-      addch(map[i]);
-      attroff(COLOR_PAIR(5));
+      attroff(COLOR_PAIR(4));
       break;
 
     default:
-      attron(COLOR_PAIR(7));
+      attron(COLOR_PAIR(5));
       addch(map[i]);
-      attroff(COLOR_PAIR(7));
+      attroff(COLOR_PAIR(5));
       break;
     }
 
-    if ((i + 1) == j - 1) {
-      tempx = startx;
+    if (i == j - 2) {
+      tempx = 1;
       tempy += 1;
-      j += (MAP_COLS);
-    } else
+      j += MAP_COLS;
+    } else {
       tempx += 1;
+    }
   }
 
   refresh();
 }
 
-PLAYER *initPlayer(int player, int startx, int starty) {
+void draw_players(game_state_t *game_state, int player_num) {
+  int x;
+  int y;
+  int pacman_id;
 
-  PLAYER *temp;
+  pthread_mutex_lock(&game_state->pacman_id_lock);
+  pacman_id = game_state->pacman_id;
+  pthread_mutex_unlock(&game_state->pacman_id_lock);
 
-  if ((temp = malloc(sizeof(PLAYER))) == NULL) {
-    perror("couldn't allocate memory for player");
+  for (int player_id = 0; player_id < player_num; player_id++) {
+    pthread_mutex_lock(&game_state->player_data_lock);
+    x = game_state->player_data[player_id].x;
+    y = game_state->player_data[player_id].y;
+    pthread_mutex_unlock(&game_state->player_data_lock);
+
+    move(x, y);
+    attron(A_BOLD);
+    attron(COLOR_PAIR(player_id));
+
+    if (player_id == pacman_id) {
+      addch('O');
+    } else {
+      addch('M');
+    }
+
+    attroff(COLOR_PAIR(player_id));
+    attroff(A_BOLD);
   }
 
-  switch (player) {
-  case PACMAN:
-    temp->number = PACMAN;
-    temp->x = startx + Pacmanx;
-    temp->y = starty + Pacmany;
-    break;
-
-  case GHOST_1:
-    temp->number = GHOST_1;
-    temp->x = startx + Ghostx + 2;
-    temp->y = starty + Ghosty - 1;
-    break;
-
-  case GHOST_2:
-    temp->number = GHOST_2;
-    temp->x = startx + Ghostx;
-    temp->y = starty + Ghosty;
-    break;
-
-  case GHOST_3:
-    temp->number = GHOST_3;
-    temp->x = startx + Ghostx + 4;
-    temp->y = starty + Ghosty;
-    break;
-  }
-  return temp;
-}
-
-void drawPlayer(PLAYER *player) {
-  start_color();
-  init_pair(PACMAN, COLOR_YELLOW, COLOR_BLACK);
-  init_pair(GHOST_1, COLOR_CYAN, COLOR_BLACK);
-  init_pair(GHOST_2, COLOR_RED, COLOR_BLACK);
-  init_pair(GHOST_3, COLOR_GREEN, COLOR_BLACK);
-
-  move(player->y, player->x);
-  attron(A_BOLD);
-  attron(COLOR_PAIR(player->number));
-
-  if (player->number == PACMAN)
-    addch('O');
-  else
-    addch('M');
-
-  attroff(COLOR_PAIR(player->number));
-  attroff(A_BOLD);
   refresh();
 }

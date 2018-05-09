@@ -8,7 +8,6 @@
 #define BUFFER_SIZE 1024
 
 // Custom Libriaries
-#include "ClientUI.h"
 #include "client_helper.h"
 #include "error.h"
 
