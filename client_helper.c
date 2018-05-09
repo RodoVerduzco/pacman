@@ -51,6 +51,13 @@ void *handle_interactions(void *arg) {
     send_request(server_fd, type, data);
     get_response(server_fd, &type, data);
     parse_game_state(game_state, player_num, data);
+
+    if(type == WAIT){
+      pthread_mutex_lock(&game_state->pacman_id_lock);
+      game_state->pacman_id ++;
+      pthread_mutex_unlock(&game_state->pacman_id_lock);
+      break;
+    }
   }
 
   pthread_exit(NULL);
@@ -95,32 +102,40 @@ void get_keys_pressed(const int player_id, game_state_t *game_state, char *data,
   int pos_x;
   int pos_y;
 
-  timeout(1000);
+  timeout(100);
   if (getch() == '\033') {
     getch(); // skip the [
     switch (getch()) {
     case 'A': // up
+      pthread_mutex_lock(&game_state->player_data_lock);
       pos_x = game_state->player_data[player_id].x;
       pos_y = game_state->player_data[player_id].y + 1;
+      pthread_mutex_unlock(&game_state->player_data_lock);
       sprintf(data, "%d %d", pos_x, pos_y);
       *type = MOVE;
       break;
     case 'B': // down
+      pthread_mutex_lock(&game_state->player_data_lock);
       pos_x = game_state->player_data[player_id].x;
       pos_y = game_state->player_data[player_id].y - 1;
+      pthread_mutex_unlock(&game_state->player_data_lock);
       sprintf(data, "%d %d", pos_x, pos_y);
       *type = MOVE;
       break;
     case 'C': // right
+      pthread_mutex_unlock(&game_state->player_data_lock);
       pos_x = game_state->player_data[player_id].x + 1;
       pos_y = game_state->player_data[player_id].y;
+      pthread_mutex_unlock(&game_state->player_data_lock);
       sprintf(data, "%d %d", pos_x, pos_y);
       *type = MOVE;
       break;
     case 'D': // left
+      pthread_mutex_lock(&game_state->player_data_lock);
       pos_x = game_state->player_data[player_id].x - 1;
       pos_y = game_state->player_data[player_id].y;
       sprintf(data, "%d %d", pos_x, pos_y);
+      pthread_mutex_unlock(&game_state->player_data_lock);
       *type = MOVE;
       break;
     }
