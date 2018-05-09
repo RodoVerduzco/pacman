@@ -144,6 +144,7 @@ void create_games(int server_fd, int player_num) {
                        &client_address_size);
     if (client_fd == -1) {
       print_network_error("accept", 0);
+      break;
     }
 
     // get the data from the client
@@ -166,6 +167,10 @@ void create_games(int server_fd, int player_num) {
       game_state = init_game_state(player_num);
       player_id = 0;
     }
+
+    if (get_interrupt()) {
+      break;
+    }
   }
 }
 
@@ -182,6 +187,7 @@ void *handle_players(void *arg) {
   close(client_fd);
   free(thread_data);
   if (player_id == 0) {
+    free(game_state->player_data);
     free(game_state);
   }
 

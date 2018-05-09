@@ -20,6 +20,7 @@ void handle_init_request(int client_fd, int player_num, int player_id,
                          game_state_t *game_state, char *data);
 void handle_game_requests(int client_fd, int player_num, int player_id,
                           game_state_t *game_state, char *data);
-void on_interrupt();
+void on_interrupt(int signal);
+int get_interrupt();
 
 #endif /* SERVER_HELPER_H */

@@ -3,8 +3,8 @@
  *    Written by Ludovic Cyril Michel, Rodolfo Verduzco and Cynthia Castillo.
  */
 
-#ifndef CLIENT_H
-#define CLIENT_H
+#ifndef CLIENT_TEST_H
+#define CLIENT_TEST_H
 #define BUFFER_SIZE 1024
 
 // Custom Libriaries

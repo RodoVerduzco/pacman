@@ -25,7 +25,6 @@ int get_request(int client_fd, int *type, char *data) {
 
   // parse the data
   sscanf(buffer, "%d %[^\t\n]", type, data);
-  printf("\nreceived %d %s", *type, data);
 
   return 0;
 }
@@ -47,8 +46,6 @@ int send_response(int client_fd, int type, char *data) {
     print_network_error("send", 0);
     return -1;
   }
-
-  printf("\nsent %s\n", buffer);
 
   if (data != NULL) {
     bzero(data, BUFFER_SIZE);

@@ -12,6 +12,8 @@ void on_interrupt(int signal) {
   printf("\nTHE GAME WAS INTERRUPTED\n");
 }
 
+int get_interrupt() { return interrupted; }
+
 /*
   This function handles the pacman game
 */
@@ -39,11 +41,7 @@ void serve(int client_fd, int player_num, int player_id,
   }
 
   stringify_game_state(game_state, player_num, data);
-
-  if (send_response(client_fd, GAMEOVER, data)) {
-    // handle game error
-    printf("Error: send WAIT\n");
-  }
+  send_response(client_fd, GAMEOVER, data);
 
   fflush(stdout);
   free(data);
@@ -159,7 +157,9 @@ void handle_game_requests(int client_fd, int player_num, int player_id,
           get_request(client_fd, &type, data);
 
           // give time to the clients to show the leaderboards
-          sleep(10);
+          if (!interrupted) {
+            sleep(10);
+          }
 
           break;
         }
@@ -176,7 +176,7 @@ void handle_game_requests(int client_fd, int player_num, int player_id,
     // Server INTERRUPTED
     if (interrupted) {
       send_response(client_fd, ERROR, NULL);
-      pthread_exit(NULL);
+      break;
     }
   }
 }

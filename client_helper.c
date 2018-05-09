@@ -26,7 +26,7 @@ void play(int server_fd, int is_test_client) {
 
   sscanf(data, "%d %d", &player_num, &player_id);
 
-  printf("\nWaiting for %d other players...\n", player_num - 1);
+  printf("\nWaiting for %d other player(s)...\n", player_num - 1);
 
   game_state_t *game_state = init_game_state(player_num);
 
@@ -52,16 +52,18 @@ void play(int server_fd, int is_test_client) {
     parse_game_state(game_state, player_num, data);
 
     if (type == GAMEOVER) {
-      printf("GAME OVER");
+      printf("\nGAME OVER\n");
       break;
     }
 
     if (type == ERROR || server_error) {
-      printf("Server is down, please try again later.");
+      printf("\nServer is down, please try again later.\n");
       break;
     }
   }
 
+  free(game_state->player_data);
+  free(game_state);
   free(thread_data);
   free(data);
 }
@@ -154,12 +156,12 @@ void get_keys_pressed(const int player_id, game_state_t *game_state, char *data,
   int pos_y;
   int option;
 
-  timeout(100);
-
   if (test_client) {
     option = rand() % 4 + 65;
+    timeout(400);
   } else {
     option = getch();
+    timeout(100);
   }
 
   switch (option) {
@@ -218,6 +220,4 @@ void print_leaderboard(game_state_t *game_state, int player_num) {
   printf("!!! %s is on top !!!\n", winner);
 
   fflush(stdout);
-
-  free(winner);
 }

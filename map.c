@@ -10,9 +10,6 @@ char *get_map() {
   // open the file
 
   FILE *file = fopen(MAP_FILE, "r");
-  if (file == NULL) {
-    printf("seg");
-  }
 
   // get the file size
 
