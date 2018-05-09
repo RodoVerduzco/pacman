@@ -16,8 +16,8 @@ game_state_t *init_game_state(int player_num) {
       (player_data_t *)malloc(sizeof(player_data_t) * player_num);
 
   for (int i = 0; i < player_num; i++) {
-    game_state->player_data[i].x = i;
-    game_state->player_data[i].y = i;
+    game_state->player_data[i].x = init_x(i);
+    game_state->player_data[i].y = init_y(i);
     game_state->player_data[i].score = 0;
   }
 
@@ -43,6 +43,16 @@ int check_coordinates(game_state_t *game_state, int player_num, int player_id,
   Check the correct displacement of the players
 */
 int check_displacement(game_state_t *game_state, int player_id, int x, int y) {
+  int displacement = 0;
+  displacement += abs(x - game_state->player_data[player_id].x);
+  displacement += abs(y - game_state->player_data[player_id].y);
+  return displacement <= 1;
+}
+
+/*
+  Check the correct displacement of the players
+*/
+int check_walls(game_state_t *game_state, int player_id, int x, int y) {
   int displacement = 0;
   displacement += abs(x - game_state->player_data[player_id].x);
   displacement += abs(y - game_state->player_data[player_id].y);

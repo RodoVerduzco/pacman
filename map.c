@@ -5,31 +5,6 @@
 
 #include "map.h"
 
-/*
-  This function draws the map
-*/
-
-void init_gui() {
-  initscr(); // ncurses init
-  noecho();  // Dont show keys pressed in console
-  curs_set(FALSE);
-
-  if (!has_colors()) {
-    endwin();
-    printf("Your terminal does not support color\n");
-    exit(1);
-  }
-
-  start_color();
-
-  init_pair(0, COLOR_YELLOW, COLOR_BLACK);
-  init_pair(1, COLOR_CYAN, COLOR_BLACK);
-  init_pair(2, COLOR_RED, COLOR_BLACK);
-  init_pair(3, COLOR_GREEN, COLOR_BLACK);
-  init_pair(4, COLOR_BLUE, COLOR_BLACK);
-  init_pair(5, COLOR_WHITE, COLOR_BLACK);
-}
-
 char *get_map() {
 
   // open the file
@@ -57,11 +32,64 @@ char *get_map() {
   return map;
 }
 
+int init_x(int player_id) {
+  switch (player_id) {
+  case 0:
+    return PLAYER_0_X;
+  case 1:
+    return PLAYER_1_X;
+  case 2:
+    return PLAYER_2_X;
+  case 3:
+    return PLAYER_3_X;
+  }
+  return 0;
+}
+
+int init_y(int player_id) {
+  switch (player_id) {
+  case 0:
+    return PLAYER_0_Y;
+  case 1:
+    return PLAYER_1_Y;
+  case 2:
+    return PLAYER_2_Y;
+  case 3:
+    return PLAYER_3_Y;
+  }
+  return 0;
+}
+
+/*
+  This function draws the map
+*/
+
+void init_gui() {
+  initscr(); // ncurses init
+  noecho();  // Dont show keys pressed in console
+  curs_set(FALSE);
+
+  if (!has_colors()) {
+    endwin();
+    printf("Your terminal does not support color\n");
+    exit(1);
+  }
+
+  start_color();
+
+  init_pair(0, COLOR_YELLOW, COLOR_BLACK);
+  init_pair(1, COLOR_CYAN, COLOR_BLACK);
+  init_pair(2, COLOR_RED, COLOR_BLACK);
+  init_pair(3, COLOR_GREEN, COLOR_BLACK);
+  init_pair(4, COLOR_BLUE, COLOR_BLACK);
+  init_pair(5, COLOR_WHITE, COLOR_BLACK);
+}
+
 void draw_map() {
   char *map = get_map();
   int i, j;
-  int tempy = 1;
-  int tempx = 1;
+  int tempy = 0;
+  int tempx = 0;
   j = MAP_COLS;
 
   for (i = 0; i < (MAP_ROWS * MAP_COLS) - 1; i++) {
@@ -81,7 +109,7 @@ void draw_map() {
     }
 
     if (i == j - 2) {
-      tempx = 1;
+      tempx = 0;
       tempy += 1;
       j += MAP_COLS;
     } else {

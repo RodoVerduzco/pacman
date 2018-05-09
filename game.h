@@ -5,6 +5,7 @@
 #ifndef GAME_H
 #define GAME_H
 
+#include "map.h"
 #include "types.h"
 
 #include <stdlib.h>
