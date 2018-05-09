@@ -80,7 +80,7 @@ void draw_map() {
       break;
     }
 
-    if (i == j - 2) {
+    if (i == j - 1) {
       tempx = 1;
       tempy += 1;
       j += MAP_COLS;
