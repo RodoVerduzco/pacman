@@ -20,6 +20,7 @@ void play(int server_fd) {
   get_response(server_fd, &type, data);
 
   sscanf(data, "%d %d", &player_num, &player_id);
+  printf("%d %d", player_num, player_id);
 
   game_state_t *game_state = init_game_state(player_num);
 

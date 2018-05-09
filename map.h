@@ -19,7 +19,7 @@
 #include "types.h"
 
 /* **** Macros***  */
-#define MAP_COLS 54
+#define MAP_COLS 53
 #define MAP_ROWS 21
 #define MAP_FILE "map.txt"
 
@@ -41,6 +41,7 @@
 
 /*  Function prototypes  */
 char *get_map();
+char get_map_position(int x, int y, char *map);
 int init_x(int player_id);
 int init_y(int player_id);
 void init_gui();

@@ -36,23 +36,25 @@ int check_coordinates(game_state_t *game_state, int player_num, int player_id,
   if (!check_displacement(game_state, player_id, x, y)) {
     return 0;
   }
+  if (!check_walls(game_state, player_id, x, y)) {
+    return 0;
+  }
   return check_other_players(game_state, player_num, player_id, x, y);
 }
 
 /*
   Check the correct displacement of the players
 */
-int check_displacement(game_state_t *game_state, int player_id, int x, int y) {
-  int displacement = 0;
-  displacement += abs(x - game_state->player_data[player_id].x);
-  displacement += abs(y - game_state->player_data[player_id].y);
-  return displacement <= 1;
+int check_walls(game_state_t *game_state, int player_id, int x, int y) {
+  char *map = get_map();
+  char position = get_map_position(x, y, map);
+  return position != WALL;
 }
 
 /*
   Check the correct displacement of the players
 */
-int check_walls(game_state_t *game_state, int player_id, int x, int y) {
+int check_displacement(game_state_t *game_state, int player_id, int x, int y) {
   int displacement = 0;
   displacement += abs(x - game_state->player_data[player_id].x);
   displacement += abs(y - game_state->player_data[player_id].y);

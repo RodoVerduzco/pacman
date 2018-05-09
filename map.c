@@ -36,7 +36,7 @@ char *get_map() {
 }
 
 char get_map_position(int x, int y, char *map) {
-  int i = x * (MAP_COLS - 2) + y;
+  int i = x * (MAP_COLS + 1) + y;
   return map[i];
 }
 
@@ -95,11 +95,9 @@ void init_gui() {
 
 void draw_map() {
   char *map = get_map();
-  int x = 0;
-  int y = 0;
 
-  for (int i = 0; i < MAP_ROWS - 1; i++) {
-    for (int j = 0; j < MAP_COLS - 2; j++) {
+  for (int i = 0; i < MAP_ROWS; i++) {
+    for (int j = 0; j < MAP_COLS; j++) {
       move(i, j);
       switch (get_map_position(i, j, map)) {
       case WALL:
@@ -120,22 +118,11 @@ void draw_map() {
   refresh();
 }
 
-void patch_map(int x, int y, char *map) {
-  char patch = get_map_position(x, y, map);
+void patch_map(int x, int y) {
   move(x, y);
-  switch (patch) {
-  case WALL:
-    attron(COLOR_PAIR(4));
-    addch(patch);
-    attroff(COLOR_PAIR(4));
-    break;
-
-  default:
-    attron(COLOR_PAIR(5));
-    addch(patch);
-    attroff(COLOR_PAIR(5));
-    break;
-  }
+  attron(COLOR_PAIR(5));
+  addch(DOT);
+  attroff(COLOR_PAIR(5));
 }
 
 void draw_players(game_state_t *game_state, int player_num,
@@ -144,14 +131,12 @@ void draw_players(game_state_t *game_state, int player_num,
   int y;
   int pacman_id;
 
-  char *map = get_map();
-
   pthread_mutex_lock(&game_state->pacman_id_lock);
   pacman_id = game_state->pacman_id;
   pthread_mutex_unlock(&game_state->pacman_id_lock);
 
   for (int player_id = 0; player_id < player_num; player_id++) {
-    patch_map(prev_positions->x[player_id], prev_positions->y[player_id], map);
+    patch_map(prev_positions->x[player_id], prev_positions->y[player_id]);
 
     pthread_mutex_lock(&game_state->player_data_lock);
     x = game_state->player_data[player_id].x;

@@ -14,6 +14,7 @@
 game_state_t *init_game_state(int player_num);
 int check_coordinates(game_state_t *game_state, int player_num, int player_id,
                       int x, int y);
+int check_walls(game_state_t *game_state, int player_id, int x, int y);
 int check_displacement(game_state_t *game_state, int player_id, int x, int y);
 int check_other_players(game_state_t *game_state, int player_num, int player_id,
                         int x, int y);
